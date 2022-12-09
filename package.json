@@ -1,0 +1,52 @@
+{
+  "name": "carousel-visualization",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "copy_draco": "mkdir -p dist/draco && cp -r node_modules/three/examples/js/libs/draco dist/",
+    "prestart": "npm run copy_draco",
+    "start": "parcel ./src/index.pug",
+    "lint_js": "eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint_js:fix": "npm run lint_js -- --fix",
+    "prettier": "prettier \"src/**/*.{js,jsx,ts,tsx,json,css,scss,pug}\"",
+    "prettier:format": "npm run prettier -- --write"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@google/model-viewer": "^2.1.1",
+    "parcel": "^2.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "three": "^0.147.0"
+  },
+  "alias": {
+    "three": "./node_modules/three"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.19.1",
+    "@parcel/transformer-pug": "^2.8.1",
+    "@parcel/transformer-sass": "^2.8.1",
+    "@prettier/plugin-pug": "^2.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
+    "autoprefixer": "^10.4.13",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-config-typescript": "^3.0.0",
+    "eslint-plugin-filenames": "^1.3.2",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-react": "^7.31.11",
+    "eslint-plugin-standard": "^5.0.0",
+    "postcss": "^8.4.19",
+    "postcss-modules": "^4.3.1",
+    "prettier": "^2.8.1",
+    "process": "^0.11.10",
+    "typescript": "^4.9.4"
+  }
+}
