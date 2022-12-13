@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "copy_draco": "mkdir -p dist/draco && cp -r node_modules/three/examples/js/libs/draco dist/",
-    "prestart": "npm run copy_draco",
     "start": "parcel ./src/index.pug",
     "lint_js": "eslint ./src --ext .js,.jsx,.ts,.tsx",
     "lint_js:fix": "npm run lint_js -- --fix",
