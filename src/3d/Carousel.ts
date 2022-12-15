@@ -1,7 +1,7 @@
 import { isValidHexColor } from "../lib/isValidHexColor";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
-
+import * as THREE from "three";
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_MESH_COLOR,
@@ -64,7 +64,7 @@ export class Carousel {
 
   currentPercentage = 0;
 
-  constructor(thing, renderer, scene, camera) {
+  constructor(thing: any, renderer: any, scene: any, camera: any) {
     this.thing = thing;
     this.renderer = renderer;
     this.scene = scene;
@@ -74,8 +74,8 @@ export class Carousel {
   }
 
   init = async () => {
-    const { thing, scene, renderer } = this;
-    const { shapePreset, shapeOptions, colors } = thing;
+    const { thing, scene, renderer }: any = this;
+    const { shapePreset, shapeOptions, colors }: any = thing;
 
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
@@ -85,7 +85,7 @@ export class Carousel {
     }
 
     if (shapePreset === SHAPE_PRESET_CUSTOM_MODEL) {
-      const gltf = await loadGLTF(shapeOptions?.customModel?.cdnUrl);
+      const gltf: any = await loadGLTF(shapeOptions?.customModel?.cdnUrl);
       // Normalize the size of the 3D Model
       const boundingBox = getBoundingBox(gltf.scene);
       const maxSize = Math.max(...boundingBox.max.toArray());
@@ -94,7 +94,8 @@ export class Carousel {
       scene.add(gltf.scene);
       this.mainShape = gltf.scene;
     } else {
-      const geometry = getGeometry(shapePreset, shapeOptions);
+      // const geometry = getGeometry(shapePreset, shapeOptions);
+      const geometry = getGeometry(shapePreset);
       const color = isValidHexColor(colors.primary) ? colors.primary : DEFAULT_MESH_COLOR;
       const material = new THREE.MeshLambertMaterial({ color, transparent: true });
       const mesh = new THREE.Mesh(geometry, material);
@@ -105,25 +106,25 @@ export class Carousel {
   };
 
   initCards = async () => {
-    const { thing, scene, cardShapes } = this;
-    const { cards } = thing;
+    const { thing, scene, cardShapes }: any = this;
+    const { cards }: any = thing;
     const step = (Math.PI * 2) / cards.length;
     for (let i = 0; i < cards.length; ++i) {
       const card = cards[i];
 
-      let map = undefined;
-      let color = DEFAULT_MESH_COLOR;
+      let map: any = undefined;
+      let color: any = DEFAULT_MESH_COLOR;
 
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
-          const source = getCardImageSource(card);
+          const source: any = getCardImageSource(card);
           map = new THREE.TextureLoader().load(source.cdnUrl);
           color = undefined;
           break;
         }
         case CARD_TYPE_VIDEO: {
           color = undefined;
-          const source = getCardImageSource(card);
+          const source: any = getCardImageSource(card);
           const video = document.createElement("video");
           video.setAttribute("autoplay", "autoplay");
           video.setAttribute("playsinline", "playsinline");
@@ -163,7 +164,7 @@ export class Carousel {
   };
 
   update() {
-    const { worldDirection, facingDirection, cardDistance, clock, camera, mainShape, cardShapes } = this;
+    const { worldDirection, facingDirection, cardDistance, clock, camera, mainShape, cardShapes }: any = this;
     let { currentPercentage } = this;
     if (currentPercentage < 1) {
       currentPercentage = Math.min(1, currentPercentage + ANIMATION_STEP);
@@ -197,7 +198,7 @@ export class Carousel {
     // determine the card's opacity.
     let minDistance = Infinity;
     let maxDistance = -Infinity;
-    let cardShape = null;
+    let cardShape: any = null;
 
     for (let i = 0; i < count; ++i) {
       const x = radius * Math.sin(i * step);
