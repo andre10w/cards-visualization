@@ -2,6 +2,7 @@ import { isValidHexColor } from "../lib/isValidHexColor";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
 import * as THREE from "three";
+import * as TWEEN from "@tweenjs/tween.js";
 import { fixTexture } from "../lib/utils";
 // const THREE = (window as any).THREE;
 import {
@@ -97,9 +98,13 @@ export class Carousel {
     } else {
       // const geometry = getGeometry(shapePreset, shapeOptions);
       const geometry = getGeometry(shapePreset);
+
       const color = isValidHexColor(colors.primary) ? colors.primary : DEFAULT_MESH_COLOR;
+
       const material = new THREE.MeshLambertMaterial({ color, transparent: true });
       const mesh = new THREE.Mesh(geometry, material);
+      const twSphere = new TWEEN.Tween(mesh.position).to({ y: 1 }, 2000).yoyo(true).repeat(Infinity).start();
+
       scene.add(mesh);
       this.mainShape = mesh;
     }
@@ -145,8 +150,6 @@ export class Carousel {
         }
       }
 
-      console.log(map);
-
       const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
       const material = new THREE.MeshBasicMaterial({
         color: color,
@@ -157,73 +160,11 @@ export class Carousel {
 
       const plane = new THREE.Mesh(geometry, material);
       plane.rotation.y = i * step;
+      const twPlane = new TWEEN.Tween(plane.position)
+        .to({ z: 20 * Math.cos(i * step), x: 20 * Math.sin(i * step) }, 3000)
+        .start();
       scene.add(plane);
       cardShapes.push(plane);
     }
   };
-
-  update() {
-    const { worldDirection, facingDirection, cardDistance, clock, camera, mainShape, cardShapes }: any = this;
-    let { currentPercentage } = this;
-    if (currentPercentage < 1) {
-      currentPercentage = Math.min(1, currentPercentage + ANIMATION_STEP);
-      this.currentPercentage = currentPercentage;
-    }
-
-    const count = cardShapes.length;
-    const step = (Math.PI * 2) / count;
-
-    camera.getWorldDirection(worldDirection);
-
-    const theta = Math.atan2(worldDirection.x, worldDirection.z) + Math.PI;
-    facingDirection.set(Math.sin(theta), 0, Math.cos(theta));
-
-    const radius = CARD_DISTANCE * currentPercentage;
-
-    // Update the scale, position and opacity of the main shape.
-    const t = clock.getElapsedTime();
-
-    if (mainShape) {
-      mainShape.position.y = -1 + Math.sin(t);
-      if (mainShape.scale) {
-        mainShape.scale.set(currentPercentage, currentPercentage, currentPercentage);
-      }
-      if (mainShape.material) {
-        mainShape.material.opacity = currentPercentage;
-      }
-    }
-
-    // Obtain the minimum and maximum distance from the camera in order to
-    // determine the card's opacity.
-    let minDistance = Infinity;
-    let maxDistance = -Infinity;
-    let cardShape: any = null;
-
-    for (let i = 0; i < count; ++i) {
-      const x = radius * Math.sin(i * step);
-      const z = radius * Math.cos(i * step);
-      cardDistance.set(x, 0, z);
-      const distance = cardDistance.distanceTo(facingDirection);
-      maxDistance = Math.max(distance, maxDistance);
-      minDistance = Math.min(distance, minDistance);
-    }
-
-    // Update the position and opacity of each card.
-    for (let i = 0; i < count; ++i) {
-      cardShape = cardShapes[i];
-
-      const x = radius * Math.sin(i * step);
-      const z = radius * Math.cos(i * step);
-      cardShape.position.set(x, 0, z);
-
-      cardDistance.set(x, 0, z);
-
-      const distance = cardDistance.distanceTo(facingDirection);
-      const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
-      // TODO: If there is only a single card, the opacity is not applied properly.
-      if (count > 1) {
-        cardShape.material.opacity = cardOpacity * currentPercentage;
-      }
-    }
-  }
 }

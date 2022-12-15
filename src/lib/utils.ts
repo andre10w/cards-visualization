@@ -18,8 +18,6 @@ export const fixTexture = (texture: any) => {
   const planeAspect = CARD_WIDTH / CARD_HEIGHT;
   const imageAspect = texture.image.width / texture.image.height;
   const aspect = imageAspect / planeAspect;
-  console.log(texture.image.width, texture.image.height);
-  console.log(aspect);
 
   aspect > 1
     ? ((texture.repeat.y = aspect), (texture.offset.y = (1 - aspect) / 2))

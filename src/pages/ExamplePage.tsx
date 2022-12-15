@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from "../lib/constants";
 
 import { Carousel } from "../3d/Carousel";
-
+import * as TWEEN from "@tweenjs/tween.js";
 // `6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5` includes a custom model.
 // const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
@@ -51,20 +51,16 @@ export const ExamplePage = () => {
     }
   };
 
-  const onFrame = () => {
+  const onFrame = (time: any) => {
     if (!isActive.current) {
       return;
     }
-
+    TWEEN.update(time);
     const renderer = rendererRef.current;
     const camera = cameraRef.current;
     const scene = sceneRef.current;
     const controls = controlsRef.current;
     const carousel = carouselRef.current;
-
-    if (carousel) {
-      carousel.update();
-    }
 
     if (controls) {
       controls.update();
@@ -109,7 +105,6 @@ export const ExamplePage = () => {
     controlsRef.current = controls;
 
     onResize();
-
     frameRef.current = requestAnimationFrame(onFrame);
 
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -118,28 +113,22 @@ export const ExamplePage = () => {
     isActive.current = true;
 
     // Set up camera
-
     camera.position.set(-2, 3, -40);
 
     // Set up lights
-
     const ambient = new THREE.AmbientLight(0xffffff, 0.2);
-
     scene.add(ambient);
-
     const p0 = new THREE.DirectionalLight(0xffffff, 0.05);
     p0.position.set(0.5, 0, 0.866);
     scene.add(p0);
-
     // White directional light at half intensity shining from the top.
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(0, 15, 0);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
-
+    // scene.add(directionalLight);
     // Initialization of Carousel component
-
     const fn = async () => {
       try {
         const response = await fetch(`https://things-dev.digital-things.com/${THING_ID}.json`);
