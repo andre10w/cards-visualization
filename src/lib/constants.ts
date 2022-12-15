@@ -49,3 +49,7 @@ export const CARD_TYPE_MULTI_MEDIA = "multi-media";
 export const CARD_TYPE_VOLUMETRIC_VIDEO = "volumetric-video";
 
 export const CARD_TYPE_RICH_TEXT = "rich-text";
+
+export const CARD_WIDTH = 16;
+
+export const CARD_HEIGHT = 16;

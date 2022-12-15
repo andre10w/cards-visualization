@@ -2,6 +2,7 @@ import { isValidHexColor } from "../lib/isValidHexColor";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
 import * as THREE from "three";
+import { fixTexture } from "../lib/utils";
 // const THREE = (window as any).THREE;
 import {
   DEFAULT_BACKGROUND_COLOR,
@@ -45,11 +46,11 @@ const getGeometry = (shapePreset: any) => {
 
 export class Carousel {
   thing = null;
-  clock = null;
+  clock: any = null;
   renderer = null;
   scene = null;
   camera = null;
-  mainShape = null;
+  mainShape: any = null;
   cardShapes = [];
 
   // These Vector instances are re-used in the main animation loop in order to
@@ -77,7 +78,6 @@ export class Carousel {
   init = async () => {
     const { thing, scene, renderer }: any = this;
     const { shapePreset, shapeOptions, colors }: any = thing;
-    console.log("init", thing);
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
       renderer.setClearColor(new THREE.Color(colors.background), 1);
@@ -120,7 +120,7 @@ export class Carousel {
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
           const source: any = getCardImageSource(card);
-          map = new THREE.TextureLoader().load(source.cdnUrl);
+          map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
           color = undefined;
           break;
         }
@@ -145,16 +145,12 @@ export class Carousel {
         }
       }
 
-      if (map) {
-        map.wrapS = THREE.ClampToEdgeWrapping;
-        map.wrapT = THREE.RepeatWrapping;
-      }
-      console.log(map.source.data);
-      const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
+      console.log(map);
 
+      const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
       const material = new THREE.MeshBasicMaterial({
-        color,
-        map,
+        color: color,
+        map: map,
         side: THREE.DoubleSide,
         transparent: true,
       });
