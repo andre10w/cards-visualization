@@ -60,7 +60,7 @@ export const getImageSourceFromSourceWithPosters = (source) => {
   return null;
 };
 
-export const getImageSourceFromImageSources = (imageSources) => {
+export const getImageSourceFromImageSources = (imageSources: any) => {
   if (!isValidArray(imageSources)) {
     return null;
   }
@@ -73,7 +73,7 @@ export const getImageSourceFromImageSources = (imageSources) => {
   return null;
 };
 
-export const getImageSourceFromSources = (sources) => {
+export const getImageSourceFromSources = (sources: any) => {
   if (!isValidArray(sources)) {
     return null;
   }
@@ -95,6 +95,7 @@ export const getThingBackgroundImageSource = (thing) => {
     imageSource = getImageSourceFromImageSource(imageBackground);
   } else if (isValidObject(videoBackground)) {
     imageSource = getImageFromSourceWithPosters(videoBackground);
+    // imageSource = getImageSourceFromSourceWithPosters(videoBackground);
   }
   return imageSource;
 };
@@ -112,7 +113,7 @@ export const getCardBackgroundImageSource = (card) => {
   return imageSource;
 };
 
-export const getCardImageSource = (card) => {
+export const getCardImageSource = (card: any) => {
   const { cardType, payload } = card;
 
   let imageSource = null;

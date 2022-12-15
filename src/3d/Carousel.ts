@@ -2,6 +2,7 @@ import { isValidHexColor } from "../lib/isValidHexColor";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
 import * as THREE from "three";
+// const THREE = (window as any).THREE;
 import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_MESH_COLOR,
@@ -25,7 +26,7 @@ const CARD_HEIGHT = 20;
 const CARD_DISTANCE = 20;
 const ANIMATION_STEP = 0.01;
 
-const getGeometry = (shapePreset) => {
+const getGeometry = (shapePreset: any) => {
   switch (shapePreset) {
     case SHAPE_PRESET_SPHERE:
       return new THREE.SphereGeometry(SHAPE_SIZE, 32, 16);
@@ -76,7 +77,7 @@ export class Carousel {
   init = async () => {
     const { thing, scene, renderer }: any = this;
     const { shapePreset, shapeOptions, colors }: any = thing;
-
+    console.log("init", thing);
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
       renderer.setClearColor(new THREE.Color(colors.background), 1);
@@ -109,6 +110,7 @@ export class Carousel {
     const { thing, scene, cardShapes }: any = this;
     const { cards }: any = thing;
     const step = (Math.PI * 2) / cards.length;
+
     for (let i = 0; i < cards.length; ++i) {
       const card = cards[i];
 
@@ -147,7 +149,7 @@ export class Carousel {
         map.wrapS = THREE.ClampToEdgeWrapping;
         map.wrapT = THREE.RepeatWrapping;
       }
-
+      console.log(map.source.data);
       const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
 
       const material = new THREE.MeshBasicMaterial({
@@ -156,6 +158,7 @@ export class Carousel {
         side: THREE.DoubleSide,
         transparent: true,
       });
+
       const plane = new THREE.Mesh(geometry, material);
       plane.rotation.y = i * step;
       scene.add(plane);
