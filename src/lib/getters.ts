@@ -94,8 +94,8 @@ export const getThingBackgroundImageSource = (thing) => {
   if (isValidObject(imageBackground)) {
     imageSource = getImageSourceFromImageSource(imageBackground);
   } else if (isValidObject(videoBackground)) {
-    imageSource = getImageFromSourceWithPosters(videoBackground);
-    // imageSource = getImageSourceFromSourceWithPosters(videoBackground);
+    // imageSource = getImageFromSourceWithPosters(videoBackground);
+    imageSource = getImageSourceFromSourceWithPosters(videoBackground);
   }
   return imageSource;
 };
@@ -132,7 +132,8 @@ export const getCardImageSource = (card: any) => {
   ) {
     const { sources } = payload;
 
-    imageSource = getImageSourceFromSources(sources);
+    // imageSource = getImageSourceFromSources(sources);
+    imageSource = getImageSourceFromImageSources(sources);
   }
 
   return imageSource;

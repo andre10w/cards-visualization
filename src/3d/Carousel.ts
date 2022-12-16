@@ -131,6 +131,7 @@ export class Carousel {
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
           const source: any = getCardImageSource(card);
+
           map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
           color = undefined;
           break;
@@ -144,7 +145,9 @@ export class Carousel {
           video.setAttribute("loop", "loop");
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
-          video.src = card.payload.sources[0].cdnUrl;
+
+          // video.src = source.cdnUrl;
+
           const sourceElement = document.createElement("source");
           sourceElement.setAttribute("src", source.cdnUrl);
           sourceElement.setAttribute("type", source.mimeType);
@@ -152,7 +155,7 @@ export class Carousel {
 
           video.load();
           video.play();
-
+          new THREE.TextureLoader().load;
           map = new THREE.VideoTexture(video);
 
           break;
