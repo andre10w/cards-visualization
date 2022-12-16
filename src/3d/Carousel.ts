@@ -121,7 +121,7 @@ export class Carousel {
 
       let map: any = undefined;
       let color: any = DEFAULT_MESH_COLOR;
-      console.log(card);
+
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
           const source: any = getCardImageSource(card);
@@ -139,16 +139,16 @@ export class Carousel {
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
           video.src = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+          console.log(video);
           // const sourceElement = document.createElement("source");
           // sourceElement.setAttribute("src", source.cdnUrl);
           // sourceElement.setAttribute("type", source.mimeType);
           // video.appendChild(sourceElement);
-
           video.load();
           video.play();
-          map = new THREE.VideoTexture(video);
 
-          console.log(map);
+          map = new THREE.VideoTexture(video);
+          map.repeat.y = 2;
           break;
         }
       }
