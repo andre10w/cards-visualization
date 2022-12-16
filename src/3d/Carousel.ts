@@ -42,7 +42,8 @@ const getGeometry = (shapePreset: any) => {
       return new THREE.TorusGeometry(SHAPE_SIZE, 0.25 * SHAPE_SIZE, 32, 100);
   }
   console.warn(`Unknown preset: ${shapePreset}`);
-  return new THREE.SphereGeometry(SHAPE_SIZE, 32, 16);
+
+  return new THREE.SphereGeometry(10, 32, 16);
 };
 
 export class Carousel {
@@ -98,13 +99,18 @@ export class Carousel {
     } else {
       // const geometry = getGeometry(shapePreset, shapeOptions);
       const geometry = getGeometry(shapePreset);
-
+      const x = { value: 1 };
       const color = isValidHexColor(colors.primary) ? colors.primary : DEFAULT_MESH_COLOR;
 
       const material = new THREE.MeshLambertMaterial({ color, transparent: true });
       const mesh = new THREE.Mesh(geometry, material);
-      const twSphere = new TWEEN.Tween(mesh.position).to({ y: 1 }, 2000).yoyo(true).repeat(Infinity).start();
 
+      mesh.scale.x = 0.1;
+      mesh.scale.y = 0.1;
+      mesh.scale.z = 0.1;
+
+      new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, 2000).start();
+      new TWEEN.Tween(mesh.position).delay(2000).to({ 1: 5 }, 2000).yoyo(true).repeat(Infinity).start();
       scene.add(mesh);
       this.mainShape = mesh;
     }
@@ -148,7 +154,7 @@ export class Carousel {
           video.play();
 
           map = new THREE.VideoTexture(video);
-          // map.repeat.y = 2;
+
           break;
         }
       }
