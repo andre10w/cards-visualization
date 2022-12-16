@@ -14,9 +14,13 @@ import {
   CARD_HEIGHT,
 } from "../lib/constants";
 
-export const fixTexture = (texture: any) => {
+export const fixTexture = (
+  texture: any,
+  width: number = texture.image.width,
+  height: number = texture.image.height
+) => {
   const planeAspect = CARD_WIDTH / CARD_HEIGHT;
-  const imageAspect = texture.image.width / texture.image.height;
+  const imageAspect = width / height;
   const aspect = imageAspect / planeAspect;
 
   aspect > 1

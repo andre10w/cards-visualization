@@ -131,8 +131,8 @@ export class Carousel {
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
           const source: any = getCardImageSource(card);
-
           map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
+
           color = undefined;
           break;
         }
@@ -146,8 +146,6 @@ export class Carousel {
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
 
-          // video.src = source.cdnUrl;
-
           const sourceElement = document.createElement("source");
           sourceElement.setAttribute("src", source.cdnUrl);
           sourceElement.setAttribute("type", source.mimeType);
@@ -155,9 +153,22 @@ export class Carousel {
 
           video.load();
           video.play();
-          new THREE.TextureLoader().load;
-          map = new THREE.VideoTexture(video);
 
+          map = new THREE.VideoTexture(video);
+          video.addEventListener(
+            "loadedmetadata",
+            function () {
+              // retrieve dimensions
+              const height = this.videoHeight;
+              const width = this.videoWidth;
+
+              map.image.width = width;
+              map.image.height = height;
+
+              fixTexture(map);
+            },
+            false
+          );
           break;
         }
       }
