@@ -148,7 +148,7 @@ export class Carousel {
           video.play();
 
           map = new THREE.VideoTexture(video);
-          map.repeat.y = 2;
+          // map.repeat.y = 2;
           break;
         }
       }
