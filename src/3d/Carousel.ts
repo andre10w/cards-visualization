@@ -144,12 +144,12 @@ export class Carousel {
           video.setAttribute("loop", "loop");
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
-          video.src = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-          console.log(video);
-          // const sourceElement = document.createElement("source");
-          // sourceElement.setAttribute("src", source.cdnUrl);
-          // sourceElement.setAttribute("type", source.mimeType);
-          // video.appendChild(sourceElement);
+          video.src = card.payload.sources[0].cdnUrl;
+          const sourceElement = document.createElement("source");
+          sourceElement.setAttribute("src", source.cdnUrl);
+          sourceElement.setAttribute("type", source.mimeType);
+          video.appendChild(sourceElement);
+
           video.load();
           video.play();
 
