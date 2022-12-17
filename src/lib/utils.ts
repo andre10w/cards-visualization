@@ -13,17 +13,19 @@ import {
   CARD_WIDTH,
   CARD_HEIGHT,
 } from "../lib/constants";
+import * as THREE from "three";
 
 export const fixTexture = (
   texture: any,
   width: number = texture.image.width,
   height: number = texture.image.height
 ) => {
+  texture.matrixAutoUpdate = true;
   const planeAspect = CARD_WIDTH / CARD_HEIGHT;
   const imageAspect = width / height;
   const aspect = imageAspect / planeAspect;
-
   aspect > 1
     ? ((texture.repeat.y = aspect), (texture.offset.y = (1 - aspect) / 2))
     : ((texture.repeat.x = 1 / aspect), (texture.offset.x = (1 - 1 / aspect) / 2));
+  // console.log(texture);
 };

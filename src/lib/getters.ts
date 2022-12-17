@@ -10,7 +10,7 @@ import {
   CARD_TYPE_HAND_TRACKING,
 } from "./constants";
 
-export const getImageSourceFromPoster = (poster) => {
+export const getImageSourceFromPoster = (poster: any) => {
   if (!isValidObject(poster)) {
     return null;
   }
@@ -21,7 +21,7 @@ export const getImageSourceFromPoster = (poster) => {
   return null;
 };
 
-export const getImageSourceFromImageSource = (imageSource) => {
+export const getImageSourceFromImageSource = (imageSource: any) => {
   if (!isValidObject(imageSource)) {
     return null;
   }
@@ -32,7 +32,7 @@ export const getImageSourceFromImageSource = (imageSource) => {
   return null;
 };
 
-export const getImageSourceFromPosters = (posters) => {
+export const getImageSourceFromPosters = (posters: any) => {
   if (!isValidArray(posters)) {
     return null;
   }
@@ -45,7 +45,7 @@ export const getImageSourceFromPosters = (posters) => {
   return null;
 };
 
-export const getImageSourceFromSourceWithPosters = (source) => {
+export const getImageSourceFromSourceWithPosters = (source: any) => {
   if (!isValidObject(source)) {
     return null;
   }
@@ -86,7 +86,7 @@ export const getImageSourceFromSources = (sources: any) => {
   return null;
 };
 
-export const getThingBackgroundImageSource = (thing) => {
+export const getThingBackgroundImageSource = (thing: any) => {
   const { imageBackground, videoBackground } = thing;
 
   let imageSource = null;
@@ -100,7 +100,7 @@ export const getThingBackgroundImageSource = (thing) => {
   return imageSource;
 };
 
-export const getCardBackgroundImageSource = (card) => {
+export const getCardBackgroundImageSource = (card: any) => {
   const { imageBackground, videoBackground } = card;
 
   let imageSource = null;

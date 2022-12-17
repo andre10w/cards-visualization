@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from "../lib/constants";
 
 import { Carousel } from "../3d/Carousel";
+
 import * as TWEEN from "@tweenjs/tween.js";
 // `6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5` includes a custom model.
 // const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
@@ -55,6 +56,7 @@ export const ExamplePage = () => {
     if (!isActive.current) {
       return;
     }
+
     TWEEN.update(time);
     const renderer = rendererRef.current;
     const camera = cameraRef.current;
@@ -65,7 +67,9 @@ export const ExamplePage = () => {
     if (controls) {
       controls.update();
     }
-
+    // if (carousel) {
+    //   carousel.update();
+    // }
     if (renderer) {
       renderer.render(scene, camera);
     }

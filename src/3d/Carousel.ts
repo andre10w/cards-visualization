@@ -17,6 +17,8 @@ import {
   SHAPE_PRESET_CYLINDER,
   SHAPE_PRESET_CONE,
   SHAPE_PRESET_TORUS,
+  CARD_TYPE_SOCIAL_MEDIA,
+  CARD_TYPE_MODEL,
 } from "../lib/constants";
 
 import { getCardImageSource } from "../lib/getters";
@@ -80,6 +82,7 @@ export class Carousel {
   init = async () => {
     const { thing, scene, renderer }: any = this;
     const { shapePreset, shapeOptions, colors }: any = thing;
+
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
       renderer.setClearColor(new THREE.Color(colors.background), 1);
@@ -99,7 +102,7 @@ export class Carousel {
     } else {
       // const geometry = getGeometry(shapePreset, shapeOptions);
       const geometry = getGeometry(shapePreset);
-      const x = { value: 1 };
+
       const color = isValidHexColor(colors.primary) ? colors.primary : DEFAULT_MESH_COLOR;
 
       const material = new THREE.MeshLambertMaterial({ color, transparent: true });
@@ -109,9 +112,6 @@ export class Carousel {
       mesh.scale.y = 0.1;
       mesh.scale.z = 0.1;
 
-      new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, 2000).start();
-      new TWEEN.Tween(mesh.position).delay(2000).to({ 1: 5 }, 2000).yoyo(true).repeat(Infinity).start();
-      scene.add(mesh);
       this.mainShape = mesh;
     }
     return this.initCards();
@@ -124,9 +124,22 @@ export class Carousel {
 
     for (let i = 0; i < cards.length; ++i) {
       const card = cards[i];
-
       let map: any = undefined;
       let color: any = DEFAULT_MESH_COLOR;
+      const createPlane = (map: any) => {
+        const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
+        const material = new THREE.MeshBasicMaterial({
+          color: color,
+          map: map,
+          side: THREE.DoubleSide,
+          transparent: true,
+        });
+
+        const plane = new THREE.Mesh(geometry, material);
+        plane.rotation.y = i * step;
+
+        cardShapes.push(plane);
+      };
 
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
@@ -134,6 +147,7 @@ export class Carousel {
           map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
 
           color = undefined;
+          createPlane(map);
           break;
         }
         case CARD_TYPE_VIDEO: {
@@ -146,11 +160,11 @@ export class Carousel {
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
 
-          const sourceElement = document.createElement("source");
-          sourceElement.setAttribute("src", source.cdnUrl);
-          sourceElement.setAttribute("type", source.mimeType);
-          video.appendChild(sourceElement);
-
+          // const sourceElement = document.createElement("source");
+          // sourceElement.setAttribute("src", source.cdnUrl);
+          // sourceElement.setAttribute("type", source.mimeType);
+          // video.appendChild(sourceElement);
+          video.src = source.cdnUrl;
           video.load();
           video.play();
 
@@ -166,28 +180,144 @@ export class Carousel {
               map.image.height = height;
 
               fixTexture(map);
+              createPlane(map);
             },
             false
           );
           break;
         }
+        case CARD_TYPE_SOCIAL_MEDIA: {
+          console.log(card);
+          color = undefined;
+          // const source: any = getCardImageSource(card);
+          const video = document.createElement("video");
+          video.setAttribute("autoplay", "autoplay");
+          video.setAttribute("playsinline", "playsinline");
+          video.setAttribute("loop", "loop");
+          video.setAttribute("crossorigin", "anonymous");
+          video.muted = true;
+
+          video.src = card.videoBackground.cdnUrl;
+          video.load();
+          video.play();
+
+          map = new THREE.VideoTexture(video);
+          createPlane(map);
+          // video.addEventListener(
+          //   "loadedmetadata",
+          //   function () {
+
+          //     // retrieve dimensions
+          //     const height = this.videoHeight;
+          //     const width = this.videoWidth;
+
+          //     map.image.width = width;
+          //     map.image.height = height;
+          //     fixTexture(map);
+
+          //     createPlane(map);
+
+          //   },
+          //   false
+          // );
+          break;
+        }
+        case CARD_TYPE_MODEL: {
+          const source: any = getCardImageSource(card);
+
+          const gltf: any = await loadGLTF(source.cdnUrl);
+
+          const boundingBox = getBoundingBox(gltf.scene);
+          const maxSize = Math.max(...boundingBox.max.toArray());
+
+          gltf.scene.scale.multiplyScalar(SHAPE_SIZE * (1 / maxSize));
+
+          gltf.scene.rotation.y = i * step;
+
+          cardShapes.push(gltf.scene);
+
+          break;
+        }
       }
-
-      const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
-      const material = new THREE.MeshBasicMaterial({
-        color: color,
-        map: map,
-        side: THREE.DoubleSide,
-        transparent: true,
-      });
-
-      const plane = new THREE.Mesh(geometry, material);
-      plane.rotation.y = i * step;
-      const twPlane = new TWEEN.Tween(plane.position)
-        .to({ z: 20 * Math.cos(i * step), x: 20 * Math.sin(i * step) }, 3000)
-        .start();
-      scene.add(plane);
-      cardShapes.push(plane);
     }
+
+    return this.startAnimation();
   };
+  startAnimation() {
+    const { cardShapes, scene, mainShape }: any = this;
+    scene.add(mainShape);
+    new TWEEN.Tween(mainShape.scale).to({ x: 1, y: 1, z: 1 }, 2000).start();
+    new TWEEN.Tween(mainShape.position).to({ y: 1 }, 2000).yoyo(true).repeat(Infinity).start();
+
+    for (let i = 0; i < cardShapes.length; i++) {
+      const mesh = cardShapes[i];
+      const rotation = mesh.rotation.y;
+      scene.add(mesh);
+      new TWEEN.Tween(mesh.position).to({ z: 20 * Math.cos(rotation), x: 20 * Math.sin(rotation) }, 3000).start();
+    }
+  }
+  update() {
+    const { worldDirection, facingDirection, cardDistance, clock, camera, mainShape, cardShapes }: any = this;
+    let { currentPercentage } = this;
+    if (currentPercentage < 1) {
+      currentPercentage = Math.min(1, currentPercentage + ANIMATION_STEP);
+      this.currentPercentage = currentPercentage;
+    }
+
+    const count = cardShapes.length;
+    const step = (Math.PI * 2) / count;
+
+    camera.getWorldDirection(worldDirection);
+
+    const theta = Math.atan2(worldDirection.x, worldDirection.z) + Math.PI;
+    facingDirection.set(Math.sin(theta), 0, Math.cos(theta));
+
+    const radius = CARD_DISTANCE * currentPercentage;
+
+    // Update the scale, position and opacity of the main shape.
+    const t = clock.getElapsedTime();
+
+    if (mainShape) {
+      mainShape.position.y = -1 + Math.sin(t);
+      if (mainShape.scale) {
+        mainShape.scale.set(currentPercentage, currentPercentage, currentPercentage);
+      }
+      if (mainShape.material) {
+        mainShape.material.opacity = currentPercentage;
+      }
+    }
+
+    // Obtain the minimum and maximum distance from the camera in order to
+    // determine the card's opacity.
+    let minDistance = Infinity;
+    let maxDistance = -Infinity;
+    let cardShape: any = null;
+
+    for (let i = 0; i < count; ++i) {
+      const x = radius * Math.sin(i * step);
+      const z = radius * Math.cos(i * step);
+      cardDistance.set(x, 0, z);
+      const distance = cardDistance.distanceTo(facingDirection);
+      maxDistance = Math.max(distance, maxDistance);
+      minDistance = Math.min(distance, minDistance);
+    }
+
+    // Update the position and opacity of each card.
+    for (let i = 0; i < count; ++i) {
+      cardShape = cardShapes[i];
+
+      const x = radius * Math.sin(i * step);
+      const z = radius * Math.cos(i * step);
+      cardShape.position.set(x, 0, z);
+
+      cardDistance.set(x, 0, z);
+
+      const distance = cardDistance.distanceTo(facingDirection);
+      const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
+      // TODO: If there is only a single card, the opacity is not applied properly.
+      if (count > 1) {
+        cardShape.material.opacity = cardOpacity * currentPercentage;
+      }
+    }
+  }
 }
