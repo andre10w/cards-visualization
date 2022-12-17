@@ -53,3 +53,7 @@ export const CARD_TYPE_RICH_TEXT = "rich-text";
 export const CARD_WIDTH = 16;
 
 export const CARD_HEIGHT = 20;
+
+// Animation Durations //////////////////////////////////////////////////////////////////
+
+export const ANIMATION_DURATION = 2000;

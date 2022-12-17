@@ -19,6 +19,7 @@ import {
   SHAPE_PRESET_TORUS,
   CARD_TYPE_SOCIAL_MEDIA,
   CARD_TYPE_MODEL,
+  ANIMATION_DURATION,
 } from "../lib/constants";
 
 import { getCardImageSource } from "../lib/getters";
@@ -44,7 +45,6 @@ const getGeometry = (shapePreset: any) => {
       return new THREE.TorusGeometry(SHAPE_SIZE, 0.25 * SHAPE_SIZE, 32, 100);
   }
   console.warn(`Unknown preset: ${shapePreset}`);
-
   return new THREE.SphereGeometry(10, 32, 16);
 };
 
@@ -82,7 +82,7 @@ export class Carousel {
   init = async () => {
     const { thing, scene, renderer }: any = this;
     const { shapePreset, shapeOptions, colors }: any = thing;
-
+    console.log(thing);
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
       renderer.setClearColor(new THREE.Color(colors.background), 1);
@@ -131,6 +131,7 @@ export class Carousel {
         const material = new THREE.MeshBasicMaterial({
           color: color,
           map: map,
+          opacity: 0,
           side: THREE.DoubleSide,
           transparent: true,
         });
@@ -172,7 +173,6 @@ export class Carousel {
           video.addEventListener(
             "loadedmetadata",
             function () {
-              // retrieve dimensions
               const height = this.videoHeight;
               const width = this.videoWidth;
 
@@ -187,7 +187,6 @@ export class Carousel {
           break;
         }
         case CARD_TYPE_SOCIAL_MEDIA: {
-          console.log(card);
           color = undefined;
           // const source: any = getCardImageSource(card);
           const video = document.createElement("video");
@@ -226,14 +225,19 @@ export class Carousel {
           const source: any = getCardImageSource(card);
 
           const gltf: any = await loadGLTF(source.cdnUrl);
-
           const boundingBox = getBoundingBox(gltf.scene);
           const maxSize = Math.max(...boundingBox.max.toArray());
-
           gltf.scene.scale.multiplyScalar(SHAPE_SIZE * (1 / maxSize));
 
-          gltf.scene.rotation.y = i * step;
+          gltf.scene.traverse((child: any) => {
+            if (child instanceof THREE.Mesh) {
+              child.material.transparent = true;
 
+              child.material.opacity = 0;
+            }
+          });
+
+          gltf.scene.rotation.y = i * step;
           cardShapes.push(gltf.scene);
 
           break;
@@ -246,14 +250,27 @@ export class Carousel {
   startAnimation() {
     const { cardShapes, scene, mainShape }: any = this;
     scene.add(mainShape);
-    new TWEEN.Tween(mainShape.scale).to({ x: 1, y: 1, z: 1 }, 2000).start();
-    new TWEEN.Tween(mainShape.position).to({ y: 1 }, 2000).yoyo(true).repeat(Infinity).start();
+    new TWEEN.Tween(mainShape.scale).to({ x: 1, y: 1, z: 1 }, ANIMATION_DURATION).start();
+    new TWEEN.Tween(mainShape.position).to({ y: 1 }, ANIMATION_DURATION).yoyo(true).repeat(Infinity).start();
 
     for (let i = 0; i < cardShapes.length; i++) {
       const mesh = cardShapes[i];
+      if (mesh instanceof THREE.Mesh) {
+        new TWEEN.Tween(mesh.material).to({ opacity: 1 }, ANIMATION_DURATION * 2).start();
+      }
+      if (mesh instanceof THREE.Group) {
+        mesh.traverse((child: any) => {
+          if (child instanceof THREE.Mesh) {
+            new TWEEN.Tween(child.material).to({ opacity: 1 }, ANIMATION_DURATION * 2).start();
+          }
+        });
+      }
+
       const rotation = mesh.rotation.y;
       scene.add(mesh);
-      new TWEEN.Tween(mesh.position).to({ z: 20 * Math.cos(rotation), x: 20 * Math.sin(rotation) }, 3000).start();
+      new TWEEN.Tween(mesh.position)
+        .to({ z: 20 * Math.cos(rotation), x: 20 * Math.sin(rotation) }, ANIMATION_DURATION * 2)
+        .start();
     }
   }
   update() {

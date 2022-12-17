@@ -27,5 +27,4 @@ export const fixTexture = (
   aspect > 1
     ? ((texture.repeat.y = aspect), (texture.offset.y = (1 - aspect) / 2))
     : ((texture.repeat.x = 1 / aspect), (texture.offset.x = (1 - 1 / aspect) / 2));
-  // console.log(texture);
 };
