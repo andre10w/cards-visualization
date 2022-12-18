@@ -57,3 +57,5 @@ export const CARD_HEIGHT = 20;
 // Animation Durations //////////////////////////////////////////////////////////////////
 
 export const ANIMATION_DURATION = 2000;
+
+export const ANIMATION_DURATION_CARDS = ANIMATION_DURATION * 2;

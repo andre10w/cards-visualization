@@ -5,8 +5,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from "../lib/constants";
 
 import { Carousel } from "../3d/Carousel";
+import { isValidUUID } from "../lib/isValidUUID";
 
-import * as TWEEN from "@tweenjs/tween.js";
 // `6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5` includes a custom model.
 // const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
@@ -31,8 +31,7 @@ export const ExamplePage = () => {
   const carouselRef = useRef();
   const isActive = useRef();
   const frameRef = useRef();
-  const raycasterRef = useRef();
-  const pointerRef = useRef();
+  const pointRef = useRef(new THREE.Vector2());
 
   const onResize = () => {
     const { innerWidth, innerHeight, devicePixelRatio } = window;
@@ -53,27 +52,39 @@ export const ExamplePage = () => {
     }
   };
 
-  function onPointerMove(event: any) {
-    const pointer = pointerRef.current;
+  const onClick = (event: any) => {
+    const point = pointRef.current;
+    const carousel = carouselRef.current;
+    if (!carousel) {
+      return;
+    }
+    point.x = (event.clientX / windowDimensions.current[0]) * 2 - 1;
+    point.y = -(event.clientY / windowDimensions.current[1]) * 2 + 1;
 
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  }
+    const objectData = carousel.getObjectDataAtPoint(point)
+    if (!objectData) {
+      return;
+    }
+    console.log(objectData)
+    const { cardId, thingId } = objectData;
+
+    if (isValidUUID(cardId)) {
+      console.log(`Clicked on Card ${cardId} (Thing ${thingId}).`);
+    } else {
+      console.log(`Clicked on Thing ${thingId}.`);
+    }
+  };
 
   const onFrame = (time: any) => {
     if (!isActive.current) {
       return;
     }
 
-    TWEEN.update(time);
-
     const renderer = rendererRef.current;
     const camera = cameraRef.current;
     const scene = sceneRef.current;
     const controls = controlsRef.current;
     const carousel = carouselRef.current;
-    const raycaster = raycasterRef.current;
-    const pointer = pointerRef.current;
 
     if (controls) {
       controls.update();
@@ -83,17 +94,8 @@ export const ExamplePage = () => {
       renderer.render(scene, camera);
     }
 
-    if (raycaster) {
-      raycaster.setFromCamera(pointer, camera);
-
-      const intersects = raycaster.intersectObjects(scene.children);
-      if (intersects.length > 0) {
-        intersects[0].object.material.color.set(0xff0000);
-      }
-      // for (let i = 0; i < intersects.length; i++) {
-      //   console.log(intersects[i]);
-      //   intersects[i].object.material.color.set(0xff0000);
-      // }
+    if (carousel) {
+      carousel.update();
     }
 
     frameRef.current = requestAnimationFrame(onFrame);
@@ -102,9 +104,8 @@ export const ExamplePage = () => {
   useEffect(() => {
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
-    window.addEventListener("pointermove", onPointerMove);
-    pointerRef.current = new THREE.Vector2();
-    raycasterRef.current = new THREE.Raycaster();
+    window.addEventListener("click", onClick);
+
     if (canvasRef.current) {
       canvasRef.current.width = windowDimensions[0];
       canvasRef.current.height = windowDimensions[1];
@@ -113,7 +114,7 @@ export const ExamplePage = () => {
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
-      window.removeEventListener("pointerMove", onPointerMove);
+      window.removeEventListener("click", onClick);
     };
   }, []);
 
@@ -163,6 +164,9 @@ export const ExamplePage = () => {
       try {
         const response = await fetch(`https://things-dev.digital-things.com/${THING_ID}.json`);
         const result = await response.json();
+
+        console.log(result);
+
         const carousel = new Carousel(result, renderer, scene, camera);
         carouselRef.current = carousel;
       } catch (e) {
