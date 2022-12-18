@@ -134,7 +134,6 @@ export class Carousel {
       mainShape = mesh;
     }
 
-
     this.mainShape = mainShape;
 
     return this.initCards();
@@ -143,24 +142,45 @@ export class Carousel {
   initCards = async () => {
     const { thing, cardShapes }: any = this;
     const { cards }: any = thing;
-    const step = (Math.PI * 2) / cards.length;
 
-    for (let i = 0; i < cards.length; ++i) {
-      const card = cards[i];
+    let count = 0;
 
+    for (const card of cards) {
+      if (card.cardType === CARD_TYPE_IMAGE) {
+        count += card.payload.sources.length;
+      } else if (card.cardType === CARD_TYPE_SOCIAL_MEDIA) {
+        if (!card.videoBackground?.cdnUrl) {
+          continue
+        } else {
+          count++;
+        }
+      } else {
+        count++;
+      }
+    }
+
+    const step = (Math.PI * 2) / count;
+
+    for (const card of cards) {
       let plane = undefined;
-
       let map: any = undefined;
       let color: any = DEFAULT_MESH_COLOR;
 
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
-          const source: any = getCardImageSource(card);
-          map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
+          for (const source of card.payload.sources) {
+            map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
 
-          color = undefined;
-          plane = createPlane(map, color);
-          break;
+            color = undefined;
+            const plane = createPlane(map, color);
+            plane.rotation.y = cardShapes.length * step;
+            cardShapes.push(plane);
+            plane.userData = {
+              thingId: thing.id,
+              cardId: card.id,
+            };
+          }
+          continue;
         }
         case CARD_TYPE_VIDEO: {
           color = undefined;
@@ -199,6 +219,9 @@ export class Carousel {
           break;
         }
         case CARD_TYPE_SOCIAL_MEDIA: {
+          if (!card.videoBackground?.cdnUrl) {
+            continue
+          }
           color = undefined;
           // const source: any = getCardImageSource(card);
           const video = document.createElement("video");
@@ -207,7 +230,6 @@ export class Carousel {
           video.setAttribute("loop", "loop");
           video.setAttribute("crossorigin", "anonymous");
           video.muted = true;
-
           video.src = card.videoBackground.cdnUrl;
           video.load();
           video.play();
@@ -259,7 +281,7 @@ export class Carousel {
         continue;
       }
 
-      plane.rotation.y = i * step;
+      plane.rotation.y = cardShapes.length * step;
       cardShapes.push(plane);
 
       plane.userData = {
@@ -320,7 +342,6 @@ export class Carousel {
 
   update() {
     const { worldDirection, facingDirection, clock, camera, cardShapes }: any = this;
-
 
     TWEEN.update();
 
