@@ -5,7 +5,7 @@ import { isValidHexColor } from "../lib/isValidHexColor";
 import { isValidUUID } from "../lib/isValidUUID";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
-import { fixTexture } from "../lib/utils";
+
 import { loadTexture, loadVideo } from "../lib/loader";
 
 import {
@@ -34,18 +34,49 @@ const CARD_WIDTH = 16;
 const CARD_HEIGHT = 20;
 
 const createPlane = (map: any, color: any) => {
-  const width = (map.image.width * CARD_HEIGHT) / map.image.height;
-  const geometry = new THREE.PlaneGeometry(width, CARD_HEIGHT);
-  // const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
+  map.matrixAutoUpdate = true;
+  const imageAspect = map.image.width / map.image.height;
+  let imageWidth: number = CARD_WIDTH;
+  let imageHeight: number = CARD_HEIGHT;
+  let sideWidth: number = CARD_WIDTH;
+  let sideHeight: number = CARD_HEIGHT;
+  let offsetX = 0;
+  let offsetY = 0;
+  if (imageAspect >= 1) {
+    imageHeight = CARD_WIDTH / imageAspect;
+    sideHeight = (CARD_HEIGHT - imageHeight) / 2;
+    offsetY = (sideHeight + imageHeight) / 2;
+  } else {
+    imageWidth = CARD_HEIGHT * imageAspect;
+    sideWidth = (CARD_WIDTH - imageWidth) / 2;
+    offsetX = (sideWidth + imageWidth) / 2;
+  }
+  const geometry = new THREE.PlaneGeometry(imageWidth, imageHeight);
+  const sideGeometry = new THREE.PlaneGeometry(sideWidth, sideHeight);
   const material = new THREE.MeshBasicMaterial({
     color: color,
     map: map,
-    opacity: 0,
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
+  const sideMaterial = new THREE.MeshBasicMaterial({
+    color: color,
     side: THREE.DoubleSide,
     transparent: true,
   });
 
-  return new THREE.Mesh(geometry, material);
+  const plane = new THREE.Mesh(geometry, material);
+  const sidePlane1 = new THREE.Mesh(sideGeometry, sideMaterial);
+  sidePlane1.position.set(offsetX, offsetY, 0);
+  const sidePlane2 = new THREE.Mesh(sideGeometry, sideMaterial);
+  sidePlane2.position.set(-offsetX, -offsetY, 0);
+
+  const planeGroup = new THREE.Group();
+  planeGroup.add(plane);
+  planeGroup.add(sidePlane1);
+  planeGroup.add(sidePlane2);
+
+  return planeGroup;
 };
 
 const getGeometry = (shapePreset: any) => {
@@ -262,23 +293,27 @@ export class Carousel {
     new TWEEN.Tween(mainShape.position).to({ y: 1 }, ANIMATION_DURATION).yoyo(true).repeat(Infinity).start();
 
     for (let i = 0; i < cardShapes.length; i++) {
-      const mesh = cardShapes[i];
-      if (mesh instanceof THREE.Mesh) {
-        new TWEEN.Tween(mesh.material).to({ opacity: 1 }, ANIMATION_DURATION_CARDS).start();
-      }
-      if (mesh instanceof THREE.Group) {
-        mesh.traverse((child: any) => {
+      const card = cardShapes[i];
+
+      if (card instanceof THREE.Group) {
+        scene.add(card);
+
+        const tempScale = card.scale.x;
+        card.scale.set(0.1, 0.1, 0.1);
+        new TWEEN.Tween(card.scale).to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION_CARDS).start();
+
+        const rotation = card.rotation.y;
+        new TWEEN.Tween(card.position)
+          .to({ z: 20 * Math.cos(rotation), x: 20 * Math.sin(rotation) }, ANIMATION_DURATION_CARDS)
+          .start();
+
+        card.traverse((child: any) => {
           if (child instanceof THREE.Mesh) {
+            child.material.opacity = 0;
             new TWEEN.Tween(child.material).to({ opacity: 1 }, ANIMATION_DURATION_CARDS).start();
           }
         });
       }
-
-      const rotation = mesh.rotation.y;
-      scene.add(mesh);
-      new TWEEN.Tween(mesh.position)
-        .to({ z: 20 * Math.cos(rotation), x: 20 * Math.sin(rotation) }, ANIMATION_DURATION_CARDS)
-        .start();
     }
   }
 
