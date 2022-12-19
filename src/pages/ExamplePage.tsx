@@ -61,11 +61,11 @@ export const ExamplePage = () => {
     point.x = (event.clientX / windowDimensions.current[0]) * 2 - 1;
     point.y = -(event.clientY / windowDimensions.current[1]) * 2 + 1;
 
-    const objectData = carousel.getObjectDataAtPoint(point)
+    const objectData = carousel.getObjectDataAtPoint(point);
     if (!objectData) {
       return;
     }
-    console.log(objectData)
+    console.log(objectData);
     const { cardId, thingId } = objectData;
 
     if (isValidUUID(cardId)) {

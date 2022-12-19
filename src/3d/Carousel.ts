@@ -6,7 +6,7 @@ import { isValidUUID } from "../lib/isValidUUID";
 import { getBoundingBox } from "../3d/getBoundingBox";
 import { loadGLTF } from "../3d/loadGLTF";
 import { fixTexture } from "../lib/utils";
-// const THREE = (window as any).THREE;
+import { loadTexture, loadVideo } from "../lib/loader";
 
 import {
   DEFAULT_BACKGROUND_COLOR,
@@ -34,7 +34,9 @@ const CARD_WIDTH = 16;
 const CARD_HEIGHT = 20;
 
 const createPlane = (map: any, color: any) => {
-  const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
+  const width = (map.image.width * CARD_HEIGHT) / map.image.height;
+  const geometry = new THREE.PlaneGeometry(width, CARD_HEIGHT);
+  // const geometry = new THREE.PlaneGeometry(CARD_WIDTH, CARD_HEIGHT);
   const material = new THREE.MeshBasicMaterial({
     color: color,
     map: map,
@@ -97,7 +99,7 @@ export class Carousel {
       renderer.setClearColor(new THREE.Color(DEFAULT_BACKGROUND_COLOR), 1);
     }
 
-    let mainShape = undefined;
+    let mainShape: any = undefined;
 
     if (shapePreset === SHAPE_PRESET_CUSTOM_MODEL) {
       const gltf: any = await loadGLTF(shapeOptions?.customModel?.cdnUrl);
@@ -109,9 +111,9 @@ export class Carousel {
       scene.add(gltf.scene);
       mainShape = gltf.scene;
 
-      mainShape.traverse((mesh) => {
+      mainShape.traverse((mesh: THREE.Mesh) => {
         mesh.userData = {
-          thingId: thing.id
+          thingId: thing.id,
         };
       });
     } else {
@@ -128,7 +130,7 @@ export class Carousel {
       mesh.scale.z = 0.01;
 
       mesh.userData = {
-        thingId: thing.id
+        thingId: thing.id,
       };
 
       mainShape = mesh;
@@ -140,7 +142,7 @@ export class Carousel {
   };
 
   initCards = async () => {
-    const { thing, cardShapes }: any = this;
+    const { thing, cardShapes, scene }: any = this;
     const { cards }: any = thing;
 
     let count = 0;
@@ -150,7 +152,7 @@ export class Carousel {
         count += card.payload.sources.length;
       } else if (card.cardType === CARD_TYPE_SOCIAL_MEDIA) {
         if (!card.videoBackground?.cdnUrl) {
-          continue
+          continue;
         } else {
           count++;
         }
@@ -162,19 +164,21 @@ export class Carousel {
     const step = (Math.PI * 2) / count;
 
     for (const card of cards) {
-      let plane = undefined;
+      let plane: THREE.Mesh = undefined;
       let map: any = undefined;
       let color: any = DEFAULT_MESH_COLOR;
 
       switch (card.cardType) {
         case CARD_TYPE_IMAGE: {
           for (const source of card.payload.sources) {
-            map = new THREE.TextureLoader().load(source.cdnUrl, fixTexture);
-
             color = undefined;
-            const plane = createPlane(map, color);
+
+            map = await loadTexture(source.cdnUrl);
+
+            plane = createPlane(map, color);
             plane.rotation.y = cardShapes.length * step;
             cardShapes.push(plane);
+
             plane.userData = {
               thingId: thing.id,
               cardId: card.id,
@@ -184,75 +188,33 @@ export class Carousel {
         }
         case CARD_TYPE_VIDEO: {
           color = undefined;
-          const source: any = getCardImageSource(card);
-          const video = document.createElement("video");
-          video.setAttribute("autoplay", "autoplay");
-          video.setAttribute("playsinline", "playsinline");
-          video.setAttribute("loop", "loop");
-          video.setAttribute("crossorigin", "anonymous");
-          video.muted = true;
 
-          // const sourceElement = document.createElement("source");
-          // sourceElement.setAttribute("src", source.cdnUrl);
-          // sourceElement.setAttribute("type", source.mimeType);
-          // video.appendChild(sourceElement);
-          video.src = source.cdnUrl;
-          video.load();
-          video.play();
+          const source: any = getCardImageSource(card);
+          const video: any = await loadVideo(source.cdnUrl);
+          const width = video.videoWidth;
+          const height = video.videoHeight;
 
           map = new THREE.VideoTexture(video);
-          video.addEventListener(
-            "loadedmetadata",
-            function () {
-              const height = this.videoHeight;
-              const width = this.videoWidth;
+          map.image.width = width;
+          map.image.height = height;
 
-              map.image.width = width;
-              map.image.height = height;
-
-              fixTexture(map);
-              plane = createPlane(map);
-            },
-            false
-          );
           plane = createPlane(map, color);
           break;
         }
         case CARD_TYPE_SOCIAL_MEDIA: {
           if (!card.videoBackground?.cdnUrl) {
-            continue
+            continue;
           }
-          color = undefined;
-          // const source: any = getCardImageSource(card);
-          const video = document.createElement("video");
-          video.setAttribute("autoplay", "autoplay");
-          video.setAttribute("playsinline", "playsinline");
-          video.setAttribute("loop", "loop");
-          video.setAttribute("crossorigin", "anonymous");
-          video.muted = true;
-          video.src = card.videoBackground.cdnUrl;
-          video.load();
-          video.play();
+
+          const video: any = await loadVideo(card.videoBackground?.cdnUrl);
+          const width = video.videoWidth;
+          const height = video.videoHeight;
 
           map = new THREE.VideoTexture(video);
+          map.image.width = width;
+          map.image.height = height;
+
           plane = createPlane(map, color);
-          // video.addEventListener(
-          //   "loadedmetadata",
-          //   function () {
-
-          //     // retrieve dimensions
-          //     const height = this.videoHeight;
-          //     const width = this.videoWidth;
-
-          //     map.image.width = width;
-          //     map.image.height = height;
-          //     fixTexture(map);
-
-          //     createPlane(map);
-
-          //   },
-          //   false
-          // );
           break;
         }
         case CARD_TYPE_MODEL: {
@@ -320,8 +282,8 @@ export class Carousel {
     }
   }
 
-  getObjectDataAtPoint (point) {
-    const { raycaster, scene, camera } = this;
+  getObjectDataAtPoint(point: THREE.Vector2) {
+    const { raycaster, scene, camera }: any = this;
     raycaster.setFromCamera(point, camera);
     const intersects = raycaster.intersectObjects(scene.children);
     if (intersects.length > 0) {
@@ -334,7 +296,7 @@ export class Carousel {
           return;
         }
         objectData = userData;
-      })
+      });
       return objectData;
     }
     return null;
@@ -348,7 +310,7 @@ export class Carousel {
     // Update the scale, position and opacity of the main shape.
     const t = clock.getElapsedTime();
     // If the animation of cards is running, do not update the opacity of the cards.
-    if (t * 1e3 <  ANIMATION_DURATION_CARDS) {
+    if (t * 1e3 < ANIMATION_DURATION_CARDS) {
       return;
     }
 
@@ -381,7 +343,7 @@ export class Carousel {
       if (count > 1) {
         cardShape.traverse((mesh) => {
           if (!mesh.material) {
-            return
+            return;
           }
           mesh.material.opacity = cardOpacity;
         });
