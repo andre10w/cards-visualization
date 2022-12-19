@@ -38,43 +38,24 @@ const createPlane = (map: any, color: any) => {
   const imageAspect = map.image.width / map.image.height;
   let imageWidth: number = CARD_WIDTH;
   let imageHeight: number = CARD_HEIGHT;
-  let sideWidth: number = CARD_WIDTH;
-  let sideHeight: number = CARD_HEIGHT;
-  let offsetX = 0;
-  let offsetY = 0;
+
   if (imageAspect >= 1) {
     imageHeight = CARD_WIDTH / imageAspect;
-    sideHeight = (CARD_HEIGHT - imageHeight) / 2;
-    offsetY = (sideHeight + imageHeight) / 2;
   } else {
     imageWidth = CARD_HEIGHT * imageAspect;
-    sideWidth = (CARD_WIDTH - imageWidth) / 2;
-    offsetX = (sideWidth + imageWidth) / 2;
   }
   const geometry = new THREE.PlaneGeometry(imageWidth, imageHeight);
-  const sideGeometry = new THREE.PlaneGeometry(sideWidth, sideHeight);
   const material = new THREE.MeshBasicMaterial({
     color: color,
     map: map,
     side: THREE.DoubleSide,
     transparent: true,
   });
-  const sideMaterial = new THREE.MeshBasicMaterial({
-    color: color,
-    side: THREE.DoubleSide,
-    transparent: true,
-  });
 
   const plane = new THREE.Mesh(geometry, material);
-  const sidePlane1 = new THREE.Mesh(sideGeometry, sideMaterial);
-  sidePlane1.position.set(offsetX, offsetY, 0);
-  const sidePlane2 = new THREE.Mesh(sideGeometry, sideMaterial);
-  sidePlane2.position.set(-offsetX, -offsetY, 0);
 
   const planeGroup = new THREE.Group();
   planeGroup.add(plane);
-  planeGroup.add(sidePlane1);
-  planeGroup.add(sidePlane2);
 
   return planeGroup;
 };
