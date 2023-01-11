@@ -8,7 +8,7 @@ export const loadTexture = (url: string) => {
 
 export const loadVideo = (url: string) => {
   return new Promise((resolve, reject) => {
-    var vElement = document.createElement("video");
+    const vElement = document.createElement("video");
     vElement.setAttribute("playsinline", "playsinline");
     vElement.crossOrigin = "anonymous";
     vElement.autoplay = true;

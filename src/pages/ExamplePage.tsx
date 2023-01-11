@@ -14,7 +14,8 @@ import { isValidUUID } from "../lib/isValidUUID";
 const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
 
 // `0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d` contains model, image and video cards.
-// const THING_ID = "0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d";
+// const THING_ID = '0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d';
+// const THING_ID = '6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5';
 
 // This is a React wrapper around THREE.JS. In scope of this project, this
 // component might not require fundamental changes, as the `Carousel` class
@@ -158,7 +159,7 @@ export const ExamplePage = () => {
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
-    // scene.add(directionalLight);
+    scene.add(directionalLight);
     // Initialization of Carousel component
     const fn = async () => {
       try {
@@ -169,6 +170,10 @@ export const ExamplePage = () => {
 
         const carousel = new Carousel(result, renderer, scene, camera);
         carouselRef.current = carousel;
+
+        await carousel.init();
+
+        carousel.startAnimation();
       } catch (e) {
         console.log(e.stack);
         throw new Error(`Thing ${THING_ID} couldn't be loaded: ${e.stack}`);

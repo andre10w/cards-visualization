@@ -8,7 +8,21 @@ import {
   CARD_TYPE_VIDEO,
   CARD_TYPE_MODEL,
   CARD_TYPE_HAND_TRACKING,
+  SOURCE_TYPE_WEB,
 } from "./constants";
+import { isValidAndNotEmptyString } from "./isValidAndNotEmptyString";
+
+export const getCardPayload = (card) => {
+  if (!isValidObject(card)) {
+    return null;
+  }
+
+  const { payload } = card;
+  if (isValidObject(payload)) {
+    return payload;
+  }
+  return null;
+};
 
 export const getImageSourceFromPoster = (poster: any) => {
   if (!isValidObject(poster)) {
@@ -113,16 +127,58 @@ export const getCardBackgroundImageSource = (card: any) => {
   return imageSource;
 };
 
-export const getCardImageSource = (card: any) => {
+export const getCardSources = (card) => {
+  const payload = getCardPayload(card);
+  if (!payload) {
+    return null;
+  }
+
+  const { sources } = payload;
+  if (!isValidArray(sources)) {
+    return null;
+  }
+
+  return sources;
+};
+
+export const getImageSourceFromSourcesWithPosters = (sources) => {
+  if (!isValidArray(sources)) {
+    return null;
+  }
+  for (const source of sources) {
+    const imageSource = getImageSourceFromSourceWithPosters(source);
+    if (imageSource !== null) {
+      return imageSource;
+    }
+  }
+  return null;
+};
+
+export const getFirstSource = (card) => {
+  const sources = getCardSources(card);
+  if (!isValidArray(sources) || sources.length === 0) {
+    return null;
+  }
+  return sources[0];
+};
+
+export const getCardImageSource = (card) => {
+  if (!isValidObject(card)) {
+    return null;
+  }
   const { cardType, payload } = card;
+
+  if (!isValidAndNotEmptyString(cardType) || !isValidObject(payload)) {
+    return null;
+  }
 
   let imageSource = null;
 
   if (cardType === CARD_TYPE_IMAGE) {
-    const { sources } = payload;
+    const sources = getCardSources(card); // [ImageProperty]
     imageSource = getImageSourceFromImageSources(sources);
   } else if (cardType === CARD_TYPE_VOLUMETRIC_VIDEO) {
-    const { poster } = payload;
+    const { poster } = payload; // ImageProperty
     imageSource = getImageSourceFromPoster(poster);
   } else if (
     cardType === CARD_TYPE_VIDEO ||
@@ -130,11 +186,31 @@ export const getCardImageSource = (card: any) => {
     cardType === CARD_TYPE_HAND_TRACKING ||
     cardType === CARD_TYPE_CHROMA_KEY_VIDEO
   ) {
-    const { sources } = payload;
-
-    // imageSource = getImageSourceFromSources(sources);
-    imageSource = getImageSourceFromImageSources(sources);
+    const sources = getCardSources(card); // [ImageProperty]
+    // CARD_TYPE_HAND_TRACKING: [ModelSourceProperty]
+    // CARD_TYPE_MODEL: [ModelSourceProperty]
+    // CARD_TYPE_VIDEO: [VideoProperty]
+    // CARD_TYPE_CHROMA_KEY_VIDEO [VideoProperty]
+    imageSource = getImageSourceFromSourcesWithPosters(sources);
   }
 
-  return imageSource;
+  if (imageSource !== null) {
+    return imageSource;
+  }
+
+  // Use the background of the card as fallback
+
+  return getCardBackgroundImageSource(card);
+};
+
+export const getSourceByType = (card, sourceType = SOURCE_TYPE_WEB) => {
+  const sources = getCardSources(card);
+  if (!isValidArray(sources) || sources.length === 0) {
+    return null;
+  }
+  const source = sources.find(({ type }) => type === sourceType);
+  if (isValidObject(source)) {
+    return source;
+  }
+  return null;
 };
