@@ -15,7 +15,7 @@ const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
 
 // `0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d` contains model, image and video cards.
 // const THING_ID = '0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d';
-// const THING_ID = '6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5';
+// const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
 // This is a React wrapper around THREE.JS. In scope of this project, this
 // component might not require fundamental changes, as the `Carousel` class
@@ -59,6 +59,10 @@ export const ExamplePage = () => {
     if (!carousel) {
       return;
     }
+    if (carousel._reversed) {
+      carousel.restartAnimation();
+      return;
+    }
     point.x = (event.clientX / windowDimensions.current[0]) * 2 - 1;
     point.y = -(event.clientY / windowDimensions.current[1]) * 2 + 1;
 
@@ -72,8 +76,8 @@ export const ExamplePage = () => {
     if (isValidUUID(cardId)) {
       console.log(`Clicked on Card ${cardId} (Thing ${thingId}).`);
     } else {
-      carousel.backAnimation();
       console.log(`Clicked on Thing ${thingId}.`);
+      !carousel._reversed && carousel.backAnimation();
     }
   };
 

@@ -20,7 +20,6 @@ import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_MESH_COLOR,
   SHAPE_SIZE,
-  ANIMATION_DURATION_REVERSE,
 } from "../lib/constants";
 import { getCardImageSource, getFirstSource, getSourceByType } from "../lib/getters";
 import { isValidHexColor } from "../lib/isValidHexColor";
@@ -32,7 +31,7 @@ import { isValidUUID } from "../lib/isValidUUID";
 import { getBoundingBox } from "./getBoundingBox";
 import { loadGLTF } from "./loadGLTF";
 
-const createPlane = (map: any, color: any) => {
+const createPlane = (map: any, color: any = null) => {
   map.matrixAutoUpdate = true;
   const imageAspect = map.image.width / map.image.height;
   let imageWidth: number = CARD_WIDTH;
@@ -85,6 +84,7 @@ export class Carousel {
   loadingManager: any = null;
   carouselGroup = new THREE.Group();
   _started: boolean = false;
+  _reversed: boolean = false;
   cardShapes = [];
   allCards = [];
 
@@ -93,6 +93,19 @@ export class Carousel {
   worldDirection = new THREE.Vector3();
   facingDirection = new THREE.Vector3();
   raycaster = new THREE.Raycaster();
+
+  // These instances are used in the start, reverse and restart animation.
+  tweenMainShapeScale: any = null;
+  tweenMainShapeElevation: any = null;
+  tweenMainShapeScaleReverse: any = null;
+  tweenMainShapeElevationReverse: any = null;
+
+  tweenCardScale: any = [];
+  tweenCardPosition: any = [];
+  tweenCardOpacity: any = [];
+  tweenCardScaleReverse: any = [];
+  tweenCardPositionReverse: any = [];
+  tweenCardOpacityReverse: any = [];
 
   constructor(thing: any, renderer: any, scene: any, camera: any, loadingManager: any = undefined) {
     this.thing = thing;
@@ -340,23 +353,28 @@ export class Carousel {
     }
     this._started = true;
 
-    mainShape.position.y -= SHAPE_SIZE * 0.5;
+    // mainShape.position.y -= SHAPE_SIZE * 0.5;
 
     const tempScale = mainShape.scale.x;
     mainShape.scale.set(0.01, 0.01, 0.01);
     carouselGroup.add(mainShape);
-
-    const tweenMainShapeScale = new TWEEN.Tween(mainShape.scale).to(
-      { x: tempScale, y: tempScale, z: tempScale },
-      ANIMATION_DURATION
-    );
-    const tweenMainShapeElevation = new TWEEN.Tween(mainShape.position)
+    this.tweenMainShapeScale = new TWEEN.Tween(mainShape.scale)
+      .to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION)
+      .onComplete(() => {
+        this._reversed = false;
+      });
+    this.tweenMainShapeScaleReverse = new TWEEN.Tween(mainShape.scale)
+      .to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION)
+      .onComplete(() => {
+        this._reversed = true;
+      });
+    this.tweenMainShapeElevation = new TWEEN.Tween(mainShape.position)
       .to({ y: mainShape.position.y + SHAPE_SIZE }, ANIMATION_DURATION)
       .yoyo(true)
       .repeat(Infinity);
+    this.tweenMainShapeElevationReverse = new TWEEN.Tween(mainShape.position).to({ y: 0 }, ANIMATION_DURATION);
 
-    tweenMainShapeScale.chain(tweenMainShapeElevation).start();
-
+    this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
     const radius = Math.max((CARD_WIDTH + CARD_GAP) / 2 / Math.sin(Math.PI / cardShapes.length), SHAPE_SIZE * 1.5);
 
     for (let i = 0; i < cardShapes.length; i++) {
@@ -367,21 +385,30 @@ export class Carousel {
       if (card instanceof THREE.Group) {
         const tempScale = card.scale.x;
         card.scale.set(0.01, 0.01, 0.01);
-        new TWEEN.Tween(card.scale).to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION_CARDS).start();
+        this.tweenCardScale.push(
+          new TWEEN.Tween(card.scale).to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION_CARDS).start()
+        );
+        this.tweenCardScaleReverse.push(new TWEEN.Tween(card.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION));
 
         const rotationY = card.rotation.y;
+        this.tweenCardPosition.push(
+          new TWEEN.Tween(card.position)
+            .to(
+              { z: radius * Math.cos(rotationY), y: CARD_HEIGHT * 0.5, x: radius * Math.sin(rotationY) },
+              ANIMATION_DURATION_CARDS
+            )
+            .start()
+        );
 
-        new TWEEN.Tween(card.position)
-          .to(
-            { z: radius * Math.cos(rotationY), y: CARD_HEIGHT * 0.5, x: radius * Math.sin(rotationY) },
-            ANIMATION_DURATION_CARDS
-          )
-          .start();
+        this.tweenCardPositionReverse.push(new TWEEN.Tween(card.position).to({ z: 0, y: 0, x: 0 }, ANIMATION_DURATION));
 
         card.traverse((child: any) => {
           if (child instanceof THREE.Mesh) {
             child.material.opacity = 0;
-            new TWEEN.Tween(child.material).to({ opacity: 1 }, ANIMATION_DURATION_CARDS).start();
+            this.tweenCardOpacity.push(
+              new TWEEN.Tween(child.material).to({ opacity: 1 }, ANIMATION_DURATION_CARDS).start()
+            );
+            this.tweenCardOpacityReverse.push(new TWEEN.Tween(child.material).to({ opacity: 0 }, ANIMATION_DURATION));
           }
         });
       }
@@ -389,18 +416,34 @@ export class Carousel {
 
     scene.add(carouselGroup);
   }
+  restartAnimation() {
+    // this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
+    this.tweenMainShapeScale.start();
+
+    this.tweenCardScale.forEach((tween: any) => {
+      tween.start();
+    });
+    this.tweenCardPosition.forEach((tween: any) => {
+      tween.start();
+    });
+    this.tweenCardOpacity.forEach((tween: any) => {
+      tween.start();
+    });
+  }
   backAnimation() {
-    const { cardShapes, mainShape }: any = this;
-    new TWEEN.Tween(mainShape.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION_REVERSE).start();
+    this.tweenMainShapeElevation.stop();
+    this.tweenMainShapeScaleReverse.start();
+    this.tweenMainShapeElevationReverse.start();
 
-    for (let i = 0; i < cardShapes.length; i++) {
-      const card = cardShapes[i];
-
-      if (card instanceof THREE.Group) {
-        new TWEEN.Tween(card.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION_REVERSE).start();
-        new TWEEN.Tween(card.position).to({ z: 0, y: 0, x: 0 }, ANIMATION_DURATION_REVERSE).start();
-      }
-    }
+    this.tweenCardScaleReverse.forEach((tween: any) => {
+      tween.start();
+    });
+    this.tweenCardPositionReverse.forEach((tween: any) => {
+      tween.start();
+    });
+    this.tweenCardOpacityReverse.forEach((tween: any) => {
+      tween.start();
+    });
   }
   getObjectDataAtPoint(point: THREE.Vector2) {
     const { raycaster, scene, camera }: any = this;
@@ -415,7 +458,7 @@ export class Carousel {
         objectData = object.userData;
       }
 
-      object.traverseAncestors((mesh) => {
+      object.traverseAncestors((mesh: any) => {
         const { userData } = mesh;
         if (!isValidUUID(userData.cardId)) {
           return;
