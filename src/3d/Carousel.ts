@@ -81,8 +81,9 @@ export class Carousel {
   scene = null;
   camera = null;
   mainShape: any = null;
+  loadingManager: any = null;
   carouselGroup = new THREE.Group();
-
+  _started: boolean = false;
   cardShapes = [];
   allCards = [];
 
@@ -92,7 +93,7 @@ export class Carousel {
   facingDirection = new THREE.Vector3();
   raycaster = new THREE.Raycaster();
 
-  constructor(thing: any, renderer: any, scene: any, camera: any, loadingManager: any) {
+  constructor(thing: any, renderer: any, scene: any, camera: any, loadingManager: any = undefined) {
     this.thing = thing;
     this.renderer = renderer;
     this.scene = scene;
@@ -395,7 +396,7 @@ export class Carousel {
     if (intersects.length > 0) {
       const intersection = intersects[0];
       const { object } = intersection;
-      let objectData = null;
+      let objectData: any = null;
 
       if (isValidUUID(object.userData?.thingId)) {
         objectData = object.userData;
