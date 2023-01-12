@@ -20,6 +20,7 @@ import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_MESH_COLOR,
   SHAPE_SIZE,
+  ANIMATION_DURATION_REVERSE,
 } from "../lib/constants";
 import { getCardImageSource, getFirstSource, getSourceByType } from "../lib/getters";
 import { isValidHexColor } from "../lib/isValidHexColor";
@@ -388,7 +389,19 @@ export class Carousel {
 
     scene.add(carouselGroup);
   }
+  backAnimation() {
+    const { cardShapes, mainShape }: any = this;
+    new TWEEN.Tween(mainShape.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION_REVERSE).start();
 
+    for (let i = 0; i < cardShapes.length; i++) {
+      const card = cardShapes[i];
+
+      if (card instanceof THREE.Group) {
+        new TWEEN.Tween(card.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION_REVERSE).start();
+        new TWEEN.Tween(card.position).to({ z: 0, y: 0, x: 0 }, ANIMATION_DURATION_REVERSE).start();
+      }
+    }
+  }
   getObjectDataAtPoint(point: THREE.Vector2) {
     const { raycaster, scene, camera }: any = this;
     raycaster.setFromCamera(point, camera);

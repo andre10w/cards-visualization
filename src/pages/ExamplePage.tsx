@@ -72,6 +72,7 @@ export const ExamplePage = () => {
     if (isValidUUID(cardId)) {
       console.log(`Clicked on Card ${cardId} (Thing ${thingId}).`);
     } else {
+      carousel.backAnimation();
       console.log(`Clicked on Thing ${thingId}.`);
     }
   };
