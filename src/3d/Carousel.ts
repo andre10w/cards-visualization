@@ -358,24 +358,18 @@ export class Carousel {
     const tempScale = mainShape.scale.x;
     mainShape.scale.set(0.01, 0.01, 0.01);
     carouselGroup.add(mainShape);
-    this.tweenMainShapeScale = new TWEEN.Tween(mainShape.scale)
-      .to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION)
-      .onComplete(() => {
-        this._reversed = false;
-      });
-    this.tweenMainShapeScaleReverse = new TWEEN.Tween(mainShape.scale)
-      .to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION)
-      .onComplete(() => {
-        this._reversed = true;
-      });
+    this.tweenMainShapeScale = new TWEEN.Tween(mainShape.scale).to(
+      { x: tempScale, y: tempScale, z: tempScale },
+      ANIMATION_DURATION
+    );
+
     this.tweenMainShapeElevation = new TWEEN.Tween(mainShape.position)
       .to({ y: mainShape.position.y + SHAPE_SIZE }, ANIMATION_DURATION)
       .yoyo(true)
       .repeat(Infinity);
-    this.tweenMainShapeElevationReverse = new TWEEN.Tween(mainShape.position).to({ y: 0 }, ANIMATION_DURATION);
-
     this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
-    const radius = Math.min((CARD_WIDTH + CARD_GAP) / 2 / Math.sin(Math.PI / cardShapes.length), SHAPE_SIZE * 1.5);
+
+    const radius = Math.max((CARD_WIDTH + CARD_GAP) / 2 / Math.sin(Math.PI / cardShapes.length), SHAPE_SIZE * 1.5);
 
     for (let i = 0; i < cardShapes.length; i++) {
       const card = cardShapes[i];
@@ -386,9 +380,18 @@ export class Carousel {
         const tempScale = card.scale.x;
         card.scale.set(0.01, 0.01, 0.01);
         this.tweenCardScale.push(
-          new TWEEN.Tween(card.scale).to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION_CARDS).start()
+          new TWEEN.Tween(card.scale)
+            .to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION_CARDS)
+            .onComplete(() => {
+              this._reversed = false;
+            })
+            .start()
         );
-        this.tweenCardScaleReverse.push(new TWEEN.Tween(card.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION));
+        this.tweenCardScaleReverse.push(
+          new TWEEN.Tween(card.scale).to({ x: 0, y: 0, z: 0 }, ANIMATION_DURATION).onComplete(() => {
+            this._reversed = true;
+          })
+        );
 
         const rotationY = card.rotation.y;
         this.tweenCardPosition.push(
@@ -417,9 +420,6 @@ export class Carousel {
     scene.add(carouselGroup);
   }
   restartAnimation() {
-    // this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
-    this.tweenMainShapeScale.start();
-
     this.tweenCardScale.forEach((tween: any) => {
       tween.start();
     });
@@ -430,11 +430,7 @@ export class Carousel {
       tween.start();
     });
   }
-  backAnimation() {
-    this.tweenMainShapeElevation.stop();
-    this.tweenMainShapeScaleReverse.start();
-    this.tweenMainShapeElevationReverse.start();
-
+  reverseAnimation() {
     this.tweenCardScaleReverse.forEach((tween: any) => {
       tween.start();
     });
