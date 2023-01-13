@@ -375,7 +375,7 @@ export class Carousel {
     this.tweenMainShapeElevationReverse = new TWEEN.Tween(mainShape.position).to({ y: 0 }, ANIMATION_DURATION);
 
     this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
-    const radius = Math.max((CARD_WIDTH + CARD_GAP) / 2 / Math.sin(Math.PI / cardShapes.length), SHAPE_SIZE * 1.5);
+    const radius = Math.min((CARD_WIDTH + CARD_GAP) / 2 / Math.sin(Math.PI / cardShapes.length), SHAPE_SIZE * 1.5);
 
     for (let i = 0; i < cardShapes.length; i++) {
       const card = cardShapes[i];
@@ -522,7 +522,7 @@ export class Carousel {
       const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
       // TODO: If there is only a single card, the opacity is not applied properly.
       if (count > 1) {
-        cardShape.traverse((mesh) => {
+        cardShape.traverse((mesh: any) => {
           if (!mesh.material) {
             return;
           }

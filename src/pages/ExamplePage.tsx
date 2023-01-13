@@ -8,13 +8,13 @@ import { Carousel } from "../3d/Carousel";
 import { isValidUUID } from "../lib/isValidUUID";
 
 // `6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5` includes a custom model.
-// const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
+const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
 // `bff130d0-66f0-4296-a57a-0aaae12d2ad0` contains image and video cards.
-const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
+// const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
 
 // `0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d` contains model, image and video cards.
-// const THING_ID = '0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d';
+// const THING_ID = "0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d";
 // const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
 // This is a React wrapper around THREE.JS. In scope of this project, this
