@@ -12,6 +12,22 @@ import {
 } from "./constants";
 import { isValidAndNotEmptyString } from "./isValidAndNotEmptyString";
 
+export const getCardById = (scene: any, id: number) => {
+  let selectedCard: any;
+
+  scene.traverse((object: any) => {
+    // if (object instanceof THREE.Group) {
+    if (object.userData.cardId === id) {
+      // if (!isValidArray(object.children)) return null;
+      selectedCard = object;
+      return;
+    }
+    // }
+    return;
+  });
+  return selectedCard;
+};
+
 export const getCardPayload = (card) => {
   if (!isValidObject(card)) {
     return null;
@@ -162,7 +178,7 @@ export const getFirstSource = (card) => {
   return sources[0];
 };
 
-export const getCardImageSource = (card) => {
+export const getCardImageSource = (card: any) => {
   if (!isValidObject(card)) {
     return null;
   }

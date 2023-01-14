@@ -21,7 +21,7 @@ import {
   DEFAULT_MESH_COLOR,
   SHAPE_SIZE,
 } from "../lib/constants";
-import { getCardImageSource, getFirstSource, getSourceByType } from "../lib/getters";
+import { getCardById, getCardImageSource, getFirstSource, getSourceByType } from "../lib/getters";
 import { isValidHexColor } from "../lib/isValidHexColor";
 import { isValidObject } from "../lib/isValidObject";
 import { isValidURL } from "../lib/isValidURL";
@@ -30,31 +30,42 @@ import { loadVideo } from "../lib/loadVideo";
 import { isValidUUID } from "../lib/isValidUUID";
 import { getBoundingBox } from "./getBoundingBox";
 import { loadGLTF } from "./loadGLTF";
+import { isValidArray } from "../lib/isValidArray";
 
-const createPlane = (map: any, color: any = null) => {
-  map.matrixAutoUpdate = true;
-  const imageAspect = map.image.width / map.image.height;
-  let imageWidth: number = CARD_WIDTH;
-  let imageHeight: number = CARD_HEIGHT;
-
-  if (imageAspect >= 1) {
-    imageHeight = CARD_WIDTH / imageAspect;
-  } else {
-    imageWidth = CARD_HEIGHT * imageAspect;
-  }
-  const geometry = new THREE.PlaneGeometry(imageWidth, imageHeight);
-  const material = new THREE.MeshBasicMaterial({
-    color: color,
-    map: map,
-    side: THREE.DoubleSide,
-    transparent: true,
-  });
-
-  const plane = new THREE.Mesh(geometry, material);
-
+const createPlane = (maps: any, color: any = null, rotation: number) => {
+  const distanceOffset = 1;
   const planeGroup = new THREE.Group();
-  planeGroup.add(plane);
+  let mapArray: any;
 
+  mapArray = isValidArray(maps) ? maps : [maps];
+
+  mapArray.forEach((map: any, index: number) => {
+    map.matrixAutoUpdate = true;
+    const imageAspect = map.image.width / map.image.height;
+    let imageWidth: number = CARD_WIDTH;
+    let imageHeight: number = CARD_HEIGHT;
+
+    if (imageAspect >= 1) {
+      imageHeight = CARD_WIDTH / imageAspect;
+    } else {
+      imageWidth = CARD_HEIGHT * imageAspect;
+    }
+    const geometry = new THREE.PlaneGeometry(imageWidth, imageHeight);
+    const material = new THREE.MeshBasicMaterial({
+      color: color,
+      map: map,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+
+    const plane = new THREE.Mesh(geometry, material);
+
+    plane.index = index;
+    plane.material.visible = index ? false : true;
+
+    planeGroup.add(plane);
+    plane.position.set(distanceOffset * Math.sin(rotation) * index, 0, distanceOffset * Math.cos(rotation) * index);
+  });
   return planeGroup;
 };
 
@@ -85,6 +96,8 @@ export class Carousel {
   carouselGroup = new THREE.Group();
   _started: boolean = false;
   _reversed: boolean = false;
+  _cardSelected: boolean = false;
+  _animate: boolean = true;
   cardShapes = [];
   allCards = [];
 
@@ -174,17 +187,14 @@ export class Carousel {
       const { cardType } = card;
       const cardIndex = allCards.length;
       if (cardType === CARD_TYPE_IMAGE) {
-        for (const source of card.payload.sources) {
-          allCards.push({
-            type: "image",
-            source,
-            cardId,
-            index: cardIndex,
-            object3d: null,
-          });
-          // Only display a single card for this kind of asset
-          break;
-        }
+        allCards.push({
+          type: "image",
+          sources: card.payload.sources,
+          cardId,
+          index: cardIndex,
+          object3d: null,
+        });
+        continue;
       } else if (cardType === CARD_TYPE_VIDEO) {
         for (const source of card.payload.sources) {
           allCards.push({
@@ -222,7 +232,7 @@ export class Carousel {
         if (isValidObject(imageBackground)) {
           allCards.push({
             type: "image",
-            source: imageBackground,
+            sources: [imageBackground],
             cardId,
             index: cardIndex,
             object3d: null,
@@ -243,18 +253,22 @@ export class Carousel {
 
     for (const card of allCards) {
       const { cardId, index } = card;
-      let plane: THREE.Mesh = undefined;
-      let map: any = undefined;
+      let plane: any = undefined;
+      let map: any = [];
       let color: any = DEFAULT_MESH_COLOR;
 
       switch (card.type) {
         case "image": {
-          const { source } = card;
+          const { sources } = card;
           color = undefined;
+          let mapArray: any = [];
 
-          map = await loadTexture(source.cdnUrl, undefined, loadingManager);
+          for (let i = 0; i < sources.length; i++) {
+            const tempMap = await loadTexture(sources[i].cdnUrl, undefined, loadingManager);
+            mapArray.push(tempMap);
+          }
 
-          plane = createPlane(map, color);
+          plane = createPlane(mapArray, color, cardShapes.length * step);
           plane.rotation.y = cardShapes.length * step;
           cardShapes.push(plane);
 
@@ -282,14 +296,13 @@ export class Carousel {
           map.image.width = width;
           map.image.height = height;
 
-          plane = createPlane(map, color);
+          plane = createPlane(map, color, cardShapes.length * step);
           plane.rotation.y = cardShapes.length * step;
           cardShapes.push(plane);
 
           // Update the `object3d` attribute with a reference to the element in
           // this group.
           card.object3d = plane;
-
           plane.userData = {
             index,
             type: card.type,
@@ -341,7 +354,7 @@ export class Carousel {
       plane.userData = {
         index,
         thingId: thing.id,
-        cardId: card.id,
+        cardId,
       };
     }
   };
@@ -358,10 +371,11 @@ export class Carousel {
     const tempScale = mainShape.scale.x;
     mainShape.scale.set(0.01, 0.01, 0.01);
     carouselGroup.add(mainShape);
-    this.tweenMainShapeScale = new TWEEN.Tween(mainShape.scale).to(
-      { x: tempScale, y: tempScale, z: tempScale },
-      ANIMATION_DURATION
-    );
+    this.tweenMainShapeScale = new TWEEN.Tween(mainShape.scale)
+      .to({ x: tempScale, y: tempScale, z: tempScale }, ANIMATION_DURATION)
+      .onComplete(() => {
+        this._animate = false;
+      });
 
     this.tweenMainShapeElevation = new TWEEN.Tween(mainShape.position)
       .to({ y: mainShape.position.y + SHAPE_SIZE }, ANIMATION_DURATION)
@@ -441,6 +455,55 @@ export class Carousel {
       tween.start();
     });
   }
+  cardCondense(id: number, imageIndex: number) {
+    const { scene }: any = this;
+    const selectedCard = getCardById(scene, id);
+
+    selectedCard.children.forEach((mesh: any, index: number) => {
+      if (index !== imageIndex) {
+        new TWEEN.Tween(mesh.material)
+          .to({ opacity: 0 }, 1000)
+          .start()
+          .onStart(() => {})
+          .onComplete(() => {
+            mesh.material.visible = false;
+            mesh.material.opacity = 1;
+          });
+      }
+
+      new TWEEN.Tween(mesh.position)
+        .to({ y: 0 }, 1000)
+        .start()
+        .onStart(() => {
+          this._animate = true;
+        })
+        .onComplete(() => {
+          this._cardSelected = false;
+          this._animate = false;
+        });
+    });
+  }
+  cardExpand(id: number) {
+    const { scene }: any = this;
+    const selectedCard = getCardById(scene, id);
+    let height = CARD_HEIGHT * Math.floor(selectedCard.children.length / 2);
+
+    selectedCard.children.forEach((mesh: any, index: number) => {
+      new TWEEN.Tween(mesh.position)
+        .to({ y: height }, 1000)
+        .start()
+        .onStart(() => {
+          mesh.material.visible = true;
+          this._animate = true;
+        })
+        .onComplete(() => {
+          this._cardSelected = true;
+          this._animate = false;
+        });
+      height -= CARD_HEIGHT;
+    });
+  }
+
   getObjectDataAtPoint(point: THREE.Vector2) {
     const { raycaster, scene, camera }: any = this;
     raycaster.setFromCamera(point, camera);
@@ -474,10 +537,8 @@ export class Carousel {
 
     TWEEN.update();
 
-    const t = clock.getElapsedTime();
-
     // If the animation of cards is running, do not update the opacity of the cards.
-    if (t * 1e3 < ANIMATION_DURATION_CARDS) {
+    if (this._animate) {
       return;
     }
 
