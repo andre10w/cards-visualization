@@ -46,6 +46,8 @@ export const ANIMATION_DURATION = 2000;
 
 export const ANIMATION_DURATION_CARDS = ANIMATION_DURATION;
 
+export const ANIMATION_CARD = 1000;
+
 // Card Types //////////////////////////////////////////////////////////////////
 
 export const CARD_TYPE_IMAGE = "image";

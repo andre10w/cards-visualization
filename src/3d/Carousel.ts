@@ -20,6 +20,7 @@ import {
   DEFAULT_BACKGROUND_COLOR,
   DEFAULT_MESH_COLOR,
   SHAPE_SIZE,
+  ANIMATION_CARD,
 } from "../lib/constants";
 import { getCardById, getCardImageSource, getFirstSource, getSourceByType } from "../lib/getters";
 import { isValidHexColor } from "../lib/isValidHexColor";
@@ -462,7 +463,7 @@ export class Carousel {
     selectedCard.children.forEach((mesh: any, index: number) => {
       if (index !== imageIndex) {
         new TWEEN.Tween(mesh.material)
-          .to({ opacity: 0 }, 1000)
+          .to({ opacity: 0 }, ANIMATION_CARD)
           .start()
           .onStart(() => {})
           .onComplete(() => {
@@ -472,7 +473,8 @@ export class Carousel {
       }
 
       new TWEEN.Tween(mesh.position)
-        .to({ y: 0 }, 1000)
+        .to({ y: 0 }, ANIMATION_CARD)
+        .easing(TWEEN.Easing.Elastic.In)
         .start()
         .onStart(() => {
           this._animate = true;
@@ -486,11 +488,12 @@ export class Carousel {
   cardExpand(id: number) {
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
-    let height = CARD_HEIGHT * Math.floor(selectedCard.children.length / 2);
+    let height = CARD_HEIGHT * (selectedCard.children.length - 1);
 
     selectedCard.children.forEach((mesh: any, index: number) => {
       new TWEEN.Tween(mesh.position)
-        .to({ y: height }, 1000)
+        .to({ y: height }, ANIMATION_CARD)
+        .easing(TWEEN.Easing.Elastic.Out)
         .start()
         .onStart(() => {
           mesh.material.visible = true;
