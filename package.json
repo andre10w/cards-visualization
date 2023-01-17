@@ -20,7 +20,8 @@
     "parcel": "^2.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "three": "^0.147.0"
+    "three": "^0.147.0",
+    "three-gltf-extensions": "^0.0.15"
   },
   "alias": {
     "three": "./node_modules/three"

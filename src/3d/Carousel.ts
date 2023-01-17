@@ -131,7 +131,7 @@ export class Carousel {
   }
 
   init = async () => {
-    const { thing, scene, renderer }: any = this;
+    const { thing, renderer }: any = this;
     const { shapePreset, shapeOptions, colors }: any = thing;
     // Apply background color, if set.
     if (isValidHexColor(colors.background)) {
@@ -145,8 +145,7 @@ export class Carousel {
     if (shapePreset === SHAPE_PRESET_CUSTOM_MODEL) {
       const cdnUrl = shapeOptions?.customModel?.cdnUrl;
       if (isValidURL(cdnUrl)) {
-        const gltf: any = await loadGLTF(shapeOptions?.customModel?.cdnUrl);
-
+        const gltf: any = await loadGLTF(cdnUrl);
         mainShape.add(gltf.scene);
 
         mainShape.traverse((mesh: THREE.Mesh) => {
