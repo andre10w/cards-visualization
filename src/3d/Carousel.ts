@@ -490,14 +490,22 @@ export class Carousel {
     let height = CARD_HEIGHT * (selectedCard.children.length - 1);
 
     selectedCard.children.forEach((mesh: any, index: number) => {
-      new TWEEN.Tween(mesh.position)
-        .to({ y: height }, ANIMATION_CARD)
-        .easing(TWEEN.Easing.Elastic.Out)
+      mesh.material.opacity = 0;
+      new TWEEN.Tween(mesh.material)
+        .to({ opacity: 1 }, ANIMATION_CARD)
         .start()
         .onStart(() => {
-          mesh.material.visible = true;
           this._animate = true;
+          mesh.material.visible = true;
         })
+
+        .onComplete(() => {});
+
+      new TWEEN.Tween(mesh.position)
+        .to({ y: height }, ANIMATION_CARD)
+        .easing(TWEEN.Easing.Elastic.In)
+        .start()
+        .onStart(() => {})
         .onComplete(() => {
           this._cardSelected = true;
           this._animate = false;
@@ -575,19 +583,19 @@ export class Carousel {
     }
 
     // Update the opacity of each card.
-    for (let i = 0; i < count; ++i) {
-      cardShape = cardShapes[i];
-      const distance = cardShape.position.distanceTo(facingDirection);
-      const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
-      // TODO: If there is only a single card, the opacity is not applied properly.
-      if (count > 1) {
-        cardShape.traverse((mesh: any) => {
-          if (!mesh.material) {
-            return;
-          }
-          mesh.material.opacity = cardOpacity;
-        });
-      }
-    }
+    // for (let i = 0; i < count; ++i) {
+    //   cardShape = cardShapes[i];
+    //   const distance = cardShape.position.distanceTo(facingDirection);
+    //   const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
+    //   // TODO: If there is only a single card, the opacity is not applied properly.
+    //   if (count > 1) {
+    //     cardShape.traverse((mesh: any) => {
+    //       if (!mesh.material) {
+    //         return;
+    //       }
+    //       mesh.material.opacity = cardOpacity;
+    //     });
+    //   }
+    // }
   }
 }

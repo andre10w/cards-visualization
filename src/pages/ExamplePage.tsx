@@ -11,8 +11,8 @@ import { isValidUUID } from "../lib/isValidUUID";
 // const THING_ID = "6eb624ac-4c3d-4f8a-abb2-f91f9555d0b5";
 
 // `bff130d0-66f0-4296-a57a-0aaae12d2ad0` contains image and video cards.
-// const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
-const THING_ID = "a2bf5f32-3e94-428a-896f-09c0938ae8bf";
+const THING_ID = "bff130d0-66f0-4296-a57a-0aaae12d2ad0";
+// const THING_ID = "a2bf5f32-3e94-428a-896f-09c0938ae8bf";
 
 // `0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d` contains model, image and video cards.
 // const THING_ID = "0ad0e9a3-6e9b-4d7a-af0a-fbef39f71b7d";
