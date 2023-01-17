@@ -473,7 +473,7 @@ export class Carousel {
 
       new TWEEN.Tween(mesh.position)
         .to({ y: 0 }, ANIMATION_CARD)
-        .easing(TWEEN.Easing.Elastic.In)
+        .easing(TWEEN.Easing.Circular.Out)
         .start()
         .onStart(() => {
           this._animate = true;
@@ -503,7 +503,7 @@ export class Carousel {
 
       new TWEEN.Tween(mesh.position)
         .to({ y: height }, ANIMATION_CARD)
-        .easing(TWEEN.Easing.Elastic.In)
+        .easing(TWEEN.Easing.Circular.In)
         .start()
         .onStart(() => {})
         .onComplete(() => {
