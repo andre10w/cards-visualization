@@ -101,6 +101,7 @@ export class Carousel {
   _animate: boolean = true;
   cardShapes = [];
   allCards = [];
+  selectedCardId: any = null;
 
   // These Vector instances are re-used in the main animation loop in order to
   // prevent memory allocation.
@@ -455,7 +456,9 @@ export class Carousel {
       tween.start();
     });
   }
-  cardCondense(id: number, imageIndex: number) {
+  cardCondense(id: any, imageIndex: number) {
+    console.log("condense");
+
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
 
@@ -464,32 +467,31 @@ export class Carousel {
         new TWEEN.Tween(mesh.material)
           .to({ opacity: 0 }, ANIMATION_CARD)
           .start()
-          .onStart(() => {})
+          .onStart(() => {
+            this._animate = true;
+          })
           .onComplete(() => {
             mesh.material.visible = false;
             mesh.material.opacity = 1;
+            this._cardSelected = false;
+            this._animate = false;
           });
       }
 
-      new TWEEN.Tween(mesh.position)
-        .to({ y: 0 }, ANIMATION_CARD)
-        .easing(TWEEN.Easing.Circular.Out)
-        .start()
-        .onStart(() => {
-          this._animate = true;
-        })
-        .onComplete(() => {
-          this._cardSelected = false;
-          this._animate = false;
-        });
+      new TWEEN.Tween(mesh.position).to({ y: 0 }, ANIMATION_CARD).easing(TWEEN.Easing.Circular.Out).start();
     });
   }
-  cardExpand(id: number) {
+  cardExpand(id: any) {
+    console.log("expand");
+    console.log(id, typeof id);
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
+    if (selectedCard.children.length === 1) return;
+
     let height = CARD_HEIGHT * (selectedCard.children.length - 1);
 
     selectedCard.children.forEach((mesh: any, index: number) => {
+      if (mesh.material.visible) return;
       mesh.material.opacity = 0;
       new TWEEN.Tween(mesh.material)
         .to({ opacity: 1 }, ANIMATION_CARD)
@@ -498,18 +500,14 @@ export class Carousel {
           this._animate = true;
           mesh.material.visible = true;
         })
-
-        .onComplete(() => {});
-
-      new TWEEN.Tween(mesh.position)
-        .to({ y: height }, ANIMATION_CARD)
-        .easing(TWEEN.Easing.Circular.In)
-        .start()
-        .onStart(() => {})
         .onComplete(() => {
           this._cardSelected = true;
           this._animate = false;
+          this.selectedCardId = id;
         });
+
+      new TWEEN.Tween(mesh.position).to({ y: height }, ANIMATION_CARD).easing(TWEEN.Easing.Circular.In).start();
+
       height -= CARD_HEIGHT;
     });
   }

@@ -70,13 +70,14 @@ export const ExamplePage = () => {
     }
     console.log(objectData);
 
-    // console.log(objectData.object.index);
     const { cardId, thingId } = objectData;
 
     if (isValidUUID(cardId)) {
       console.log(`Clicked on Card ${cardId} (Thing ${thingId}).`);
 
-      carousel._cardSelected ? carousel.cardCondense(cardId, objectData.object.index) : carousel.cardExpand(cardId);
+      if (carousel.selectedCardId === null || cardId === carousel.selectedCardId) {
+        carousel._cardSelected ? carousel.cardCondense(cardId, objectData.object.index) : carousel.cardExpand(cardId);
+      }
     } else {
       console.log(`Clicked on Thing ${thingId}.`);
 
