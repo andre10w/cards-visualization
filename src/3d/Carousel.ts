@@ -457,8 +457,6 @@ export class Carousel {
     });
   }
   cardCondense(id: any, imageIndex: number) {
-    console.log("condense");
-
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
 
@@ -482,8 +480,6 @@ export class Carousel {
     });
   }
   cardExpand(id: any) {
-    console.log("expand");
-    console.log(id, typeof id);
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
     if (selectedCard.children.length === 1) return;
