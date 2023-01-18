@@ -84,7 +84,14 @@ export const ExamplePage = () => {
       carousel._reversed ? carousel.restartAnimation() : carousel.reverseAnimation();
     }
   };
-
+  const onMousemove = (event: any) => {
+    const carousel = carouselRef.current;
+    const point = new THREE.Vector2();
+    point.x = (event.clientX / windowDimensions.current[0]) * 2 - 1;
+    point.y = -(event.clientY / windowDimensions.current[1]) * 2 + 1;
+    const object = carousel.getObjectDataAtPoint(point);
+    document.body.style.cursor = object ? "pointer" : "default";
+  };
   const onFrame = (time: any) => {
     if (!isActive.current) {
       return;
@@ -115,7 +122,7 @@ export const ExamplePage = () => {
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     window.addEventListener("click", onClick);
-
+    window.addEventListener("mousemove", onMousemove);
     if (canvasRef.current) {
       canvasRef.current.width = windowDimensions[0];
       canvasRef.current.height = windowDimensions[1];
