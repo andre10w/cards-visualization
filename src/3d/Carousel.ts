@@ -65,7 +65,7 @@ const createPlane = (maps: any, color: any = null, rotation: number) => {
     plane.material.visible = index ? false : true;
 
     planeGroup.add(plane);
-    plane.position.set(distanceOffset * Math.sin(rotation) * index, 0, distanceOffset * Math.cos(rotation) * index);
+    plane.position.set(-distanceOffset * Math.sin(rotation) * index, 0, -distanceOffset * Math.cos(rotation) * index);
   });
   return planeGroup;
 };
@@ -459,7 +459,9 @@ export class Carousel {
   cardCondense(id: any, imageIndex: number) {
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
-
+    const distanceOffset = 1;
+    const rotation = selectedCard.rotation.y;
+    let zOffset = 1;
     selectedCard.children.forEach((mesh: any, index: number) => {
       if (index !== imageIndex) {
         new TWEEN.Tween(mesh.material)
@@ -476,15 +478,29 @@ export class Carousel {
           });
       }
 
-      new TWEEN.Tween(mesh.position).to({ y: 0 }, ANIMATION_CARD).easing(TWEEN.Easing.Circular.Out).start();
+      new TWEEN.Tween(mesh.position)
+        .to({ y: 0 }, ANIMATION_CARD)
+        .easing(TWEEN.Easing.Circular.Out)
+        .start()
+        .onComplete(() => {
+          if (index === imageIndex) {
+            mesh.position.set(0, 0, 0);
+          } else {
+            mesh.position.set(
+              -distanceOffset * Math.sin(rotation) * zOffset,
+              0,
+              -distanceOffset * Math.cos(rotation) * zOffset
+            );
+            zOffset++;
+          }
+        });
     });
   }
   cardExpand(id: any) {
     const { scene }: any = this;
     const selectedCard = getCardById(scene, id);
     if (selectedCard.children.length === 1) return;
-
-    let height = CARD_HEIGHT * (selectedCard.children.length - 1);
+    let hOffset = 1;
 
     selectedCard.children.forEach((mesh: any, index: number) => {
       if (mesh.material.visible) return;
@@ -501,10 +517,11 @@ export class Carousel {
           this._animate = false;
           this.selectedCardId = id;
         });
-
-      new TWEEN.Tween(mesh.position).to({ y: height }, ANIMATION_CARD).easing(TWEEN.Easing.Circular.In).start();
-
-      height -= CARD_HEIGHT;
+      new TWEEN.Tween(mesh.position)
+        .to({ y: CARD_HEIGHT * hOffset }, ANIMATION_CARD)
+        .easing(TWEEN.Easing.Circular.In)
+        .start();
+      hOffset++;
     });
   }
 
@@ -577,19 +594,19 @@ export class Carousel {
     }
 
     // Update the opacity of each card.
-    // for (let i = 0; i < count; ++i) {
-    //   cardShape = cardShapes[i];
-    //   const distance = cardShape.position.distanceTo(facingDirection);
-    //   const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
-    //   // TODO: If there is only a single card, the opacity is not applied properly.
-    //   if (count > 1) {
-    //     cardShape.traverse((mesh: any) => {
-    //       if (!mesh.material) {
-    //         return;
-    //       }
-    //       mesh.material.opacity = cardOpacity;
-    //     });
-    //   }
-    // }
+    for (let i = 0; i < count; ++i) {
+      cardShape = cardShapes[i];
+      const distance = cardShape.position.distanceTo(facingDirection);
+      const cardOpacity = 1 - (distance - minDistance) / (maxDistance - minDistance);
+      // TODO: If there is only a single card, the opacity is not applied properly.
+      if (count > 1) {
+        cardShape.traverse((mesh: any) => {
+          if (!mesh.material) {
+            return;
+          }
+          mesh.material.opacity = cardOpacity;
+        });
+      }
+    }
   }
 }
