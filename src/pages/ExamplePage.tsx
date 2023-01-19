@@ -86,11 +86,24 @@ export const ExamplePage = () => {
   };
   const onMousemove = (event: any) => {
     const carousel = carouselRef.current;
-    const point = new THREE.Vector2();
+    const point = pointRef.current;
     point.x = (event.clientX / windowDimensions.current[0]) * 2 - 1;
     point.y = -(event.clientY / windowDimensions.current[1]) * 2 + 1;
     const object = carousel.getObjectDataAtPoint(point);
     document.body.style.cursor = object ? "pointer" : "default";
+
+    if (!object) {
+      carousel.hoveredCardId && !carousel._cardSelected && !carousel._animate && carousel.mouseOut();
+      carousel.hoveredCardId = null;
+      return;
+    }
+    const { cardId } = object;
+    if (isValidUUID(cardId)) {
+      if (carousel._cardSelected) return;
+      if (carousel.hoveredCardId === cardId) return;
+      carousel.hoveredCardId = cardId;
+      carousel.mouseHover();
+    }
   };
   const onFrame = (time: any) => {
     if (!isActive.current) {

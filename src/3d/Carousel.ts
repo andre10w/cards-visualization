@@ -102,6 +102,7 @@ export class Carousel {
   cardShapes = [];
   allCards = [];
   selectedCardId: any = null;
+  hoveredCardId: any = null;
 
   // These Vector instances are re-used in the main animation loop in order to
   // prevent memory allocation.
@@ -462,9 +463,14 @@ export class Carousel {
     const selectedCard = getCardById(scene, id);
     const distanceOffset = 1;
     const rotation = selectedCard.rotation.y;
-    let zOffset = 1;
+    let xzOffset = 1;
+    //rearrange the images in the card
+    const selectedIndex = selectedCard.children.findIndex((mesh: any) => mesh.index === imageIndex);
+    const selectedImage = selectedCard.children.splice(selectedIndex, 1);
+    selectedCard.children.unshift(selectedImage[0]);
+
     selectedCard.children.forEach((mesh: any, index: number) => {
-      if (index !== imageIndex) {
+      if (index !== 0) {
         new TWEEN.Tween(mesh.material)
           .to({ opacity: 0 }, ANIMATION_CARD)
           .start()
@@ -484,15 +490,15 @@ export class Carousel {
         .easing(TWEEN.Easing.Circular.Out)
         .start()
         .onComplete(() => {
-          if (index === imageIndex) {
+          if (index === 0) {
             mesh.position.set(0, 0, 0);
           } else {
             mesh.position.set(
-              -distanceOffset * Math.sin(rotation) * zOffset,
+              -distanceOffset * Math.sin(rotation) * xzOffset,
               0,
-              -distanceOffset * Math.cos(rotation) * zOffset
+              -distanceOffset * Math.cos(rotation) * xzOffset
             );
-            zOffset++;
+            xzOffset++;
           }
         });
     });
@@ -504,7 +510,7 @@ export class Carousel {
     let hOffset = 1;
 
     selectedCard.children.forEach((mesh: any, index: number) => {
-      if (mesh.material.visible) return;
+      if (!index) return;
       mesh.material.opacity = 0;
       new TWEEN.Tween(mesh.material)
         .to({ opacity: 1 }, ANIMATION_CARD)
@@ -553,7 +559,29 @@ export class Carousel {
     }
     return null;
   }
+  mouseHover() {
+    console.log("mouse hover");
+    const { scene, hoveredCardId }: any = this;
+    const hoveredCard = getCardById(scene, hoveredCardId);
 
+    hoveredCard.children.forEach((mesh: any, index: number) => {
+      if (!index) return;
+
+      mesh.material.visible = true;
+      mesh.material.opacity = 1;
+    });
+  }
+  mouseOut() {
+    console.log("mouse out");
+    const { scene, hoveredCardId }: any = this;
+    const hoveredCard = getCardById(scene, hoveredCardId);
+
+    hoveredCard.children.forEach((mesh: any, index: number) => {
+      if (!index) return;
+      mesh.material.visible = false;
+      mesh.material.opacity = 0;
+    });
+  }
   update() {
     const { worldDirection, facingDirection, clock, camera, cardShapes, allCards }: any = this;
 

@@ -16,13 +16,11 @@ export const getCardById = (scene: any, id: number) => {
   let selectedCard: any;
 
   scene.traverse((object: any) => {
-    // if (object instanceof THREE.Group) {
     if (object.userData.cardId === id) {
-      // if (!isValidArray(object.children)) return null;
       selectedCard = object;
       return;
     }
-    // }
+
     return;
   });
   return selectedCard;
