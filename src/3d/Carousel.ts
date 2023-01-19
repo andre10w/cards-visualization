@@ -380,6 +380,7 @@ export class Carousel {
 
     this.tweenMainShapeElevation = new TWEEN.Tween(mainShape.position)
       .to({ y: mainShape.position.y + SHAPE_SIZE }, ANIMATION_DURATION)
+      .easing(TWEEN.Easing.Sinusoidal.In)
       .yoyo(true)
       .repeat(Infinity);
     this.tweenMainShapeScale.chain(this.tweenMainShapeElevation).start();
